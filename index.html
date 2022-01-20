@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Catan</title>
+    <script src="script.js" async></script>
+    <link rel="stylesheet" href="style.css">
+
+  </head>  
+  <body>
+    <canvas id="game" ></canvas>
+    <div id="sidebar">
+      <div id="playerInfo">
+        
+      </div>
+      <div id="generalInfo">
+        <div id="diceRoll">
+          <table id="dieTable">
+            <tr id="dieTr">
+              <td id="yellowDice">
+                1
+              </td>
+              <td id="redDice">
+                1
+              </td>
+            </tr>
+            <tr id="rollDieTr">
+              <td colspan="2">
+                <button onclick="rollDie()" id="dieButton">
+                  Roll Die
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <button onclick="endTurn()" id="endTurnButton" disabled="true">
+                  End Turn
+                </button>
+              </td>
+            </tr>
+          </table>
+
+        </div>
+        
+      </div>
+    </div>
+    <div id="menu">  
+      <table id = "inputTable">
+        <tr>
+          <td>
+            players:
+          </td>
+          <td>
+            <input type="number" id="playerAmount" name="playerAmount" min="3" max="6" value="4">
+          </td>
+        </tr>
+        <tr id="name1">
+          <td>
+            player 1 name:
+          </td>
+          <td>
+            <input type="text" id="playerName1" name="playerName1">
+          </td>
+        </tr>
+        <tr id="color1">
+          <td>
+            player 1 color:
+          </td>
+          <td>
+            <select name="color" id="playerColor1">
+              <option value="red">red</option>
+              <option value="blue">blue</option>
+              <option value="yellow">yellow</option>
+              <option value="white">white</option>
+              <option value="green">green</option>
+              <option value="brown">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="name2">
+          <td>
+            player 2 name:
+          </td>
+          <td>
+            <input type="text" id="playerName2" name="playerName2">
+          </td>
+        </tr>
+        <tr id="color2">
+          <td>
+            player 2 color:
+          </td>
+          <td>
+            <select name="color" id="playerColor2">
+              <option value="blue">blue</option>              
+              <option value="red">red</option>
+              <option value="yellow">yellow</option>
+              <option value="white">white</option>
+              <option value="green">green</option>
+              <option value="brown">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="name3">
+          <td>
+            player 3 name:
+          </td>
+          <td>
+            <input type="text" id="playerName3" name="playerName3">
+          </td>
+        </tr>
+        <tr id="color3">
+          <td>
+            player 3 color:
+          </td>
+          <td>
+            <select name="color" id="playerColor3">
+              <option value="yellow">yellow</option>              
+              <option value="red">red</option>
+              <option value="blue">blue</option>
+              <option value="white">white</option>
+              <option value="green">green</option>
+              <option value="brown">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="name4">
+          <td>
+            player 4 name:
+          </td>
+          <td>
+            <input type="text" id="playerName4" name="playerName4">
+          </td>
+        </tr>
+        <tr id="color4">
+          <td>
+            player 4 color:
+          </td>
+          <td>
+            <select name="color" id="playerColor4">
+              <option value="white">white</option>              
+              <option value="red">red</option>
+              <option value="blue">blue</option>
+              <option value="yellow">yellow</option>
+              <option value="green">green</option>
+              <option value="brown">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="name5" style="display:none;">
+          <td>
+            player 5 name:
+          </td>
+          <td>
+            <input type="text" id="playerName5" name="playerName5">
+          </td>
+        </tr>
+        <tr id="color5" style="display:none;">
+          <td>
+            player 5 color:
+          </td>
+          <td>
+            <select name="color" id="playerColor5">
+              <option value="green">green</option>              
+              <option value="red">red</option>
+              <option value="blue">blue</option>
+              <option value="yellow">yellow</option>
+              <option value="white">white</option>
+              <option value="brown">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="name6" style="display:none;">
+          <td>
+            player 6 name:
+          </td>
+          <td>
+            <input type="text" id="playerName6" name="playerName6">
+          </td>
+        </tr>
+        <tr id="color6" style="display:none;">
+          <td>
+            player 6 color:
+          </td>
+          <td>
+            <select name="color" id="playerColor6">
+              <option value="brown">brown</option>                              
+              <option value="red">red</option>
+              <option value="blue">blue</option>
+              <option value="yellow">yellow</option>
+              <option value="white">white</option>
+              <option value="green">green</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <button onclick="setupGame()">
+              Start the Game
+            </button>
+          </td>
+          <td>
+            <span id="errOutput"></span>
+          </td>
+        </tr>
+      </table>
+    </div>      
+  </body>
+</html>
