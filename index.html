@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <title>Catan</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/icon.png?v=1643138388697">
     <script src="script.js" async></script>
+    <script src="data.js" async></script>
+    <script src="board.js" async></script>
+    <script src="player.js" async></script>
+    <script src="mouse.js" async></script>
+    <script src="developmentCards.js" async></script>
     <link rel="stylesheet" href="style.css">
 
   </head>  
@@ -25,8 +31,15 @@
             </tr>
             <tr id="rollDieTr">
               <td colspan="2">
-                <button onclick="rollDie()" id="dieButton">
+                <button onclick="rollDie()" id="dieButton" disabled="true">
                   Roll Die
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <button onclick="showShop(true)" id="shopButton" disabled="true">
+                  Show The Shop
                 </button>
               </td>
             </tr>
@@ -38,19 +51,141 @@
               </td>
             </tr>
           </table>
-
         </div>
-        
+        <div id="shop">
+          <table id="buildingInfo">
+            <tr>
+              <th class="buildingTd">
+                building
+              </th>
+              <th class="buildingTd">
+                cost
+              </th>
+              <th class="buildingTd">
+                buy buttons
+              </th>
+            </tr>
+            <tr>
+              <td class="buildingTd"> 
+                road
+              </td>
+              <td class="buildingTd">
+                1 brick and 1 lumber
+              </td>
+              <td class="buildingTd">
+                <button onclick="buy('road')">
+                  buy road                                    
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td class="buildingTd">
+                settlement
+              </td>
+              <td class="buildingTd">
+                1 brick, 1 lumber, 1 wool and 1 grain
+              </td>
+              <td class="buildingTd">
+                <button onclick="buy('settlement')">
+                  buy settlement                           
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td class="buildingTd">
+                city
+              </td>
+              <td class="buildingTd">
+                2 grain and 3 ore (must be placed on a settlement)
+              </td>
+              <td class="buildingTd">
+                <button onclick="buy('city')">
+                  buy city                                   
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td class="buildingTd">
+                development card
+              </td>
+              <td class="buildingTd">
+                1 wool, 1 grain and 1 ore                 
+              </td>
+              <td class="buildingTd">
+                <button onclick="buy('developmentCard')">
+                  buy development card                                    
+                </button>
+              </td>
+            </tr>
+          </table>
+          <button onclick="showShop(false)" id="closeShopButton">
+            Close the shop
+          </button>
+          <table>
+            <tr>
+              <th class="resourceTd">
+                resource
+              </th>
+              <td class="resourceTd">
+                lumber
+              </td>
+              <td class="resourceTd">
+                wool
+              </td>
+              <td class="resourceTd">
+                ore
+              </td>
+              <td class="resourceTd">
+                brick
+              </td>
+              <td class="resourceTd">
+                grain
+              </td>
+            </tr>
+            <tr>
+              <th class="resourceTd">
+                amount
+              </th>
+              <td id="lumberAmount" class="resourceTd">
+                0
+              </td>
+              <td id="woolAmount" class="resourceTd">
+                0
+              </td>
+              <td id="oreAmount" class="resourceTd">
+                0
+              </td>
+              <td id="brickAmount" class="resourceTd">
+                0
+              </td>
+              <td id="grainAmount" class="resourceTd">
+                0
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div id="buyData">
+          Click on the map to place your <span id="buildingType"></span>.<br><br>
+          <button onclick="cancelBuild()">
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
-    <div id="menu">  
+    <div id="cardDisplay">
+      
+    </div>
+    <div id="menu"> 
+      <h1>
+        Web Catan
+      </h1>
       <table id = "inputTable">
         <tr>
           <td>
             players:
           </td>
           <td>
-            <input type="number" id="playerAmount" name="playerAmount" min="3" max="6" value="4">
+            <input type="number" id="playerAmount" name="playerAmount" min="1" max="6" value="4">
           </td>
         </tr>
         <tr id="name1">
