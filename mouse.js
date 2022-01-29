@@ -1,3 +1,4 @@
+
 canvas.addEventListener('wheel', function(e) {
     if(e.deltaY < 0) zoomLevel += 0.05
     if(e.deltaY > 0) zoomLevel -= 0.05
@@ -43,9 +44,13 @@ canvas.addEventListener('click', function(e) {
                 let cost = buyData[choosingBuilding].cost
                 for(let r in cost) playerList[turn].resources[r] -= cost[r]
                 choosingBuilding = false;
+                soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
                 document.getElementById("buyData").style.display="none"
                 document.getElementById("shop").style.display="block"
-              } else builtSettlement = j
+              } else {
+                builtSettlement = j
+                soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
+              }       
               winCheck();
             }
             
@@ -59,6 +64,8 @@ canvas.addEventListener('click', function(e) {
             let cost = buyData[choosingBuilding].cost
             for(let r in cost) playerList[turn].resources[r] -= cost[r]
             choosingBuilding = false;
+            soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
+            showShop(true)
             document.getElementById("buyData").style.display="none"
             document.getElementById("shop").style.display="block"
             winCheck();
@@ -101,13 +108,14 @@ canvas.addEventListener('click', function(e) {
             if(r.floorType.includes("land")) {
               if(setupPhase == "road") {
                 builtSettlement = false;
+                soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
                 // road building in setup phase
                 r.player = turn;
                 playerList[turn].roads.push(r)
                 playerList[turn].roadLeft--
                 if(setupAmount === 0) turn++;
                 else turn--;
-                document.getElementById("cardDisplay").style.display = "none"
+                document.getElementById("informationDisplay").style.display = "none"
                 if(turn >= playerList.length) {
                   setupAmount++ 
                   turn = playerList.length-1
@@ -124,12 +132,22 @@ canvas.addEventListener('click', function(e) {
                   r.player = turn;
                   playerList[turn].roads.push(r)
                   playerList[turn].roadLeft--
-                  let cost = buyData[choosingBuilding].cost
-                  for(let r in cost) playerList[turn].resources[r] -= cost[r]
                   updateSidebar(turn, true)
-                  choosingBuilding = false;
-                  document.getElementById("buyData").style.display="none"
-                  document.getElementById("shop").style.display="block"
+                  soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
+                  if(buyFreeRoads > 0) {
+                    buyFreeRoads--
+                  } else {
+                    let cost = buyData[choosingBuilding].cost
+                    for(let r in cost) playerList[turn].resources[r] -= cost[r]
+                  }
+                  if(buyFreeRoads <=0) {
+                    choosingBuilding = false;
+                    showShop(true)
+                    document.getElementById("buyData").style.display="none"
+                    document.getElementById("shop").style.display="block"
+                    document.getElementById("cancelBuyBtn").style.display = "block"
+                  }
+                  
                 }
                 
               }
@@ -140,6 +158,52 @@ canvas.addEventListener('click', function(e) {
         
         break;
       }
+    }
+  }
+  if(newRobberLocation){
+    for(let tile in tileList){
+      if(tileList[tile].checkClickCollision(e.offsetX,e.offsetY)){
+        newRobberLocation = false;
+        let output = "<table id='resourceStealing'>"
+        output += "<tr><th>player</th><th>total resource cards</th><th>player selection</th><tr>"
+        let totalResources = 0
+        
+        // find all corners of the tile
+        let points = []
+        let a = Math.PI/3
+        for(let i=0; i<6; i++) { 
+          // add the points of the corner of the hexagon to the list of points, round it to 5 decimals
+          points.push([Math.round((Math.cos(a * i)+tileList[tile].x)*100000)/100000,Math.round((Math.sin(a * i)+tileList[tile].y)*100000)/100000])
+        }
+      
+        // get a list of the players owning the junctions at these points
+        let players = points.map(p => junctionList.find(j => (j.x == p[0] && j.y == p[1])).player).filter(p => p!==false)
+        players = [...new Set(players)];
+        players = players.sort(function (a, b) {  return a - b;  });
+        console.log(players)
+        if(players.length != 0 || (players.length == 1 && players[0] == turn)){
+          stealResource = true;
+          for(let p in players){
+            let victim = players[p]
+            if(victim != turn){
+              totalResources = 0
+              for(let r in playerList[victim].resources){
+                totalResources += playerList[victim].resources[r]
+              }
+              output +="<tr><td>"+playerList[victim].name+"</td><td>"+totalResources+"</td><td>"+"<button onclick='playerSteals("+victim+","+totalResources+")'>steal from " + playerList[victim].name + "</button></td></tr>"   
+            }
+          }
+          output += "</table>"
+          document.getElementById("informationDisplay").style.display = "block"
+          document.getElementById("informationDisplay").innerHTML = output
+        } else {
+          document.getElementById("shopButton").disabled = false;  
+          document.getElementById("endTurnButton").disabled = false;
+          document.getElementById("playerCards"+turn).disabled = false;  
+        }
+        document.getElementById("placeRobberInfo").style.display="none"
+        document.getElementById("diceRoll").style.display="block"
+      } 
     }
   }
 });

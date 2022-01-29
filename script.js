@@ -21,11 +21,15 @@ let longestRoadPlayer = false; // which player has the longest road, false cus n
 let largestArmyPlayer = false; // which player has the largest army, false cus noone has the largest army at the beginning
 let rolling = true; // whether the player still has to roll or not
 let turn = 0; // variable that shows which player's turn it is
-let winner = false; // variable that stores if ther is a winner
+let winner = false; // variable that stores if there is a winner
 let tileList = []; // array that contains all the different tiles
 let roadList = []; // array that contains all the different roads
 let junctionList = []; // array that contains all the different junctions
 let cardStack = []; // the left development cards
+
+// variables that keep track of stuff for development cards
+let addResources = 0
+let buyFreeRoads = 0
 
 // store how far in the setup phase (placing initial buildings) the game is (set false if setup phase is done)
 let setupPhase = "settlement";
@@ -42,6 +46,9 @@ let gameStarted = false;
 let dieResult = false;
 let choosingBuilding = false;
 var playerAmount = 0;
+let robbedPlayers = [];
+let newRobberLocation = false;
+let stealResource = false;
 
 function createTileList(){
   robberPlaced = false
@@ -151,7 +158,7 @@ function menu(){
 function showCards(p) {
   let player = playerList[p]
   // idk just show the cards or something
-  let cardDiv = document.getElementById("cardDisplay")
+  let cardDiv = document.getElementById("informationDisplay")
   cardDiv.style.display = "block"
   
   // create the table
@@ -191,7 +198,7 @@ function showCards(p) {
 function useCard(p, index) {
   let player = playerList[p]
   console.log(p,index)
-  document.getElementById("cardDisplay").style.display = "none"
+  document.getElementById("informationDisplay").style.display = "none"
   // use the card
   player.developmentCards[index].cardFunc(p)
   // remove the card from the player
@@ -239,7 +246,7 @@ function setupGame(){
   console.log(gameStarted)
 }
 
-function updateSidebar(turn,playerChange = true) {
+function updateSidebar(turn,playerChange = false) {
   for(let p in playerList) {
     let player = playerList[p]
     let playerDiv = document.getElementById("playerInfo"+p)
@@ -275,6 +282,7 @@ function rollDie(){
   // roll a random number for both dice
   let redDice = Math.ceil(Math.random()*6)
   let yellowDice = Math.ceil(Math.random()*6)
+  soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/353975__nettimato__rolling-dice-1.wav?v=1643480529229")
   dieResult = redDice + yellowDice
   // show dice rolls in sidebar
   document.getElementById("redDice").innerHTML = redDice  
@@ -282,9 +290,9 @@ function rollDie(){
   document.getElementById("dieButton").disabled = true;
   document.getElementById("shopButton").disabled = false;  
   document.getElementById("endTurnButton").disabled = false;
-  
+  // dieResult = 7;
   if(dieResult == 7){ // checks if something needs to be done with the robber
-    let robbedPlayers = []
+    robbedPlayers = []
     let totalResources = 0;
     for(let player in playerList){
       totalResources = 0;
@@ -292,8 +300,34 @@ function rollDie(){
         totalResources += playerList[player].resources[resource]
       }
       if(totalResources > 7){
-        robbedPlayers.push([player, Math.floor(totalResources/2)])
+        robbedPlayers.push([player, totalResources, Math.floor(totalResources/2)])
       }
+    }
+    // robbedPlayers = [[0,1,2]]
+    document.getElementById("placeRobberInfo").style.display="block"
+    document.getElementById("diceRoll").style.display="none"
+    if(robbedPlayers.length!=0){
+      document.getElementById("endTurnButton").disabled = true
+      document.getElementById("shopButton").disabled = true
+      document.getElementById("robberConfirmationButton").disabled = true
+      let robberDiv = document.getElementById("robberDisplay")
+      robberDiv.style.display = "block"
+      let player = robbedPlayers[0][0]
+      document.getElementById("robberPlayer").innerHTML = playerList[player].name
+      document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
+      document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
+      document.getElementById("totalResourcesSelected").innerHTML = 0
+      document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
+      for(let resource in playerList[player].resources){
+        document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
+        document.getElementById(resource + "RobberAmount").value = 0
+        document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
+      }
+    } else {
+      newRobberLocation = true;
+      document.getElementById("shopButton").disabled = true;  
+      document.getElementById("endTurnButton").disabled = true;
+      document.getElementById("playerCards"+turn).disabled = true;
     }
     console.log(robbedPlayers)
   } else {
@@ -311,6 +345,103 @@ function rollDie(){
   }
   updateSidebar(turn)
 }
+
+function confirmRobber(){
+  // still not created yet
+  let robberDiv = document.getElementById("robberDisplay")  
+  robberDiv.style.display = "none"
+  let player = robbedPlayers[0][0]
+  for(let resource in playerList[player].resources){
+    console.log(document.getElementById(resource + "RobberAmount").value)
+    playerList[player].resources[resource] -= parseInt(document.getElementById(resource + "RobberAmount").value) 
+  }
+  console.log(player, turn)
+  if(player == turn){
+    updateSidebar(turn)
+  }
+  robbedPlayers.shift()
+  if(robbedPlayers.length == 0){
+    newRobberLocation = true;
+    document.getElementById("placeRobberInfo").style.display="block"
+    document.getElementById("diceRoll").style.display="none"
+  } else { /* could be put in a function cus its double */
+    document.getElementById("robberConfirmationButton").disabled = true
+    robberDiv = document.getElementById("robberDisplay")
+    robberDiv.style.display = "block"
+    player = robbedPlayers[0][0]
+    document.getElementById("robberPlayer").innerHTML = playerList[player].name
+    document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
+    document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
+    document.getElementById("totalResourcesSelected").innerHTML = 0
+    document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
+    for(let resource in playerList[player].resources){
+      document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
+      document.getElementById(resource + "RobberAmount").value = 0
+      document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
+    }
+  }
+}
+
+const lumberRobber = document.getElementById("lumberRobberAmount")
+const woolRobber = document.getElementById("woolRobberAmount")
+const oreRobber = document.getElementById("oreRobberAmount")
+const brickRobber = document.getElementById("brickRobberAmount")
+const grainRobber = document.getElementById("grainRobberAmount")
+
+lumberRobber.onchange=()=>{
+  losingResources("lumber")
+}
+woolRobber.onchange=()=>{
+  losingResources("wool")
+}
+oreRobber.onchange=()=>{
+  losingResources("ore")
+}
+brickRobber.onchange=()=>{
+  losingResources("brick")
+}
+grainRobber.onchange=()=>{
+  losingResources("grain")
+}
+
+function losingResources(resource){
+  amountInput.value = Math.round(amountInput.value)
+  if(isNaN(parseInt(document.getElementById(resource + "RobberAmount").value))) document.getElementById(resource + "RobberAmount").value = 0
+  if(parseInt(document.getElementById(resource + "RobberAmount").value) < 0) document.getElementById(resource + "RobberAmount").value = 0
+  if(parseInt(document.getElementById(resource + "RobberAmount").value) > document.getElementById(resource + "RobberAmount").value) document.getElementById(resource + "RobberAmount").value = document.getElementById(resoure + "RobberAmount").value
+  let totalRobberResources = parseInt(lumberRobber.value) + parseInt(woolRobber.value) + parseInt(oreRobber.value) + parseInt(brickRobber.value) + parseInt(grainRobber.value)
+  if(robbedPlayers[0][2]<totalRobberResources){
+    document.getElementById(resource + "RobberAmount").value = parseInt(document.getElementById(resource + "RobberAmount").value) + robbedPlayers[0][2] - totalRobberResources
+    totalRobberResources = parseInt(lumberRobber.value) + parseInt(woolRobber.value) + parseInt(oreRobber.value) + parseInt(brickRobber.value) + parseInt(grainRobber.value)
+  }
+  document.getElementById("totalResourcesSelected").innerHTML = totalRobberResources
+  document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2] - totalRobberResources
+  if(robbedPlayers[0][2] - totalRobberResources == 0){
+    document.getElementById("robberConfirmationButton").disabled = false
+  } else {
+    document.getElementById("robberConfirmationButton").disabled = true
+  }
+}
+
+function playerSteals(victim,totalResources){
+  if(totalResources!=0){
+    let stolenResource = Math.ceil(Math.random()*totalResources)
+    for(let r in playerList[victim].resources){
+      stolenResource -= playerList[victim].resources[r]
+      if(stolenResource <=0){
+        playerList[victim].resources[r] -=1
+        playerList[turn].resources[r] += 1
+        break;
+      }
+    }
+  }
+  document.getElementById("shopButton").disabled = false;  
+  document.getElementById("endTurnButton").disabled = false;
+  document.getElementById("playerCards"+turn).disabled = false;
+  document.getElementById("informationDisplay").style.display = "none"  
+  updateSidebar(turn)
+}
+
 
 function showShop(show){
   // enable or disable shop screen
@@ -337,28 +468,38 @@ function winCheck(){
 function endTurn() {
   // increment turn and update sidebar stuff
   turn = (turn+1)%playerList.length
-  updateSidebar(turn)
+  updateSidebar(turn, true)
   document.getElementById("dieButton").disabled = false;
   document.getElementById("shopButton").disabled = true;  
   document.getElementById("endTurnButton").disabled = true;
-  document.getElementById("cardDisplay").style.display = "none"
+  document.getElementById("informationDisplay").style.display = "none"
 }
 
-function buy(item) {
+function buy(item, freeRoad=false) {
   let cost = buyData[item].cost
   let canBuy = true;
-  for(let r in cost) {
-    if(playerList[turn].resources[r] < cost[r]) canBuy = false;
+  if(!freeRoad) {
+    for(let r in cost) {
+      if(playerList[turn].resources[r] < cost[r]) canBuy = false;
+    } 
   }
+  
   if(canBuy) {
     if(item == "developmentCard") {
       // remove the items from the player
       let cost = buyData[item].cost
       for(let r in cost) playerList[turn].resources[r] -= cost[r]
       updateSidebar(turn)
+      soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/512131__beezlefm__coins-small-sound.wav?v=1643481304147")
+      showShop(true)
       // give the card to the player
       playerList[turn].developmentCards.push(cardStack.shift())
     } else if(playerList[turn][item+"Left"] > 0) {
+      if(freeRoad) {
+        buyFreeRoads = 2
+        document.getElementById("cancelBuyBtn").style.display = "none"
+      }
+      
       // if the player has any of the building left, wait for them to place it
       choosingBuilding = item
       document.getElementById("buildingType").innerHTML = item
@@ -371,10 +512,17 @@ function buy(item) {
   console.log(canBuy)
 }
 
+// cancel waiting for a building to be placed
 function cancelBuild() {
   choosingBuilding = false;
   document.getElementById("buyData").style.display="none"
   document.getElementById("shop").style.display="block"
+}
+
+function soundEffect(sound){
+    var audio = new Audio(sound);
+    audio.volume = .6;
+    audio.play();
 }
 
 
