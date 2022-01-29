@@ -95,6 +95,38 @@ class Tile{
     //undo canvas transformations
     ctx.restore()
   }
+  checkClickCollision(clickX, clickY){
+    let scl = (Math.min(canvas.width,canvas.height)/13)*zoomLevel
+    let rot = this.rot
+    let x = this.x
+    let y = this.y
+    let h = (Math.sin(60*Math.PI/180)-Math.sin(240*Math.PI/180))*scl
+    let a = Math.PI/3
+    let vs = []    
+    for(let i=0; i<6; i++) { 
+      vs.push([(Math.cos(a * i)+x)*scl+canvas.width/2,(Math.sin(a * i)+y)*scl+canvas.height/2])
+    }
+    if(this.name != "water" && this.name != "port" && this.name != "desert" && !this.robber){
+      var inside = false;
+      for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+          var xi = vs[i][0], yi = vs[i][1];
+          var xj = vs[j][0], yj = vs[j][1];
+
+          var intersect = ((yi > clickY) != (yj > clickY))
+              && (clickX < (xj - xi) * (clickY - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+      } 
+      if(inside){
+        for(let t in tileList){
+          if(tileList[t].robber){
+            tileList[t].robber=false;
+            break;
+          }
+        }
+        return this.robber = true
+      }
+    }
+  }
 }
 
 class Road {

@@ -7,8 +7,8 @@
     <script src="data.js" async></script>
     <script src="board.js" async></script>
     <script src="player.js" async></script>
-    <script src="mouse.js" async></script>
     <script src="developmentCards.js" async></script>
+    <script src="mouse.js" async></script>    
     <link rel="stylesheet" href="style.css">
 
   </head>  
@@ -166,14 +166,87 @@
         </div>
         <div id="buyData">
           Click on the map to place your <span id="buildingType"></span>.<br><br>
-          <button onclick="cancelBuild()">
+          <button id="cancelBuyBtn" onclick="cancelBuild()">
             Cancel
           </button>
         </div>
+        <div id="placeRobberInfo">
+          <p>
+            Click a hexagon to move the robber. This cannot be a desert or water tile and cannot be the tile where the robber currently is
+          </p>
+        </div>
       </div>
     </div>
-    <div id="cardDisplay">
+    <div id="informationDisplay">
       
+    </div>
+    <div id="robberDisplay">
+      <h1> <span id="robberPlayer"></span> got attacked by the robbor</h1>
+      <h2>You have <span id="robberTotal"></span> resources, so you have to give away <span  id="robberLoss"></span></h2>
+      <table id="robberTable">
+        <tr>
+          <th>resource</th>
+          <th>amount you have</th>
+          <th>giving away</th>
+        </tr>
+        <tr>
+          <td>lumber</td>
+          <td id="lumberTotalRobber"></td>
+          <td>
+            <input type="number" id="lumberRobberAmount" min="0" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>wool</td>
+          <td id="woolTotalRobber"></td>
+          <td>
+            <input type="number" id="woolRobberAmount" min="0" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>ore</td>
+          <td id="oreTotalRobber"></td>
+          <td>
+            <input type="number" id="oreRobberAmount" min="0" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>brick</td>
+          <td id="brickTotalRobber"></td>
+          <td>
+            <input type="number" id="brickRobberAmount" min="0" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>grain</td>
+          <td id="grainTotalRobber"></td>
+          <td>
+            <input type="number" id="grainRobberAmount" min="0" value="0">
+          </td>
+        </tr>
+      </table>
+      <p>
+        you have selected <span id="totalResourcesSelected">0</span> resources. You need to select <span id="totalResourcesToSelect">0</span> more.
+      </p>
+      <button id="robberConfirmationButton" onclick="confirmRobber()" disabled="true">
+        confirm your selection
+      </button>
+    </div>
+    <div id="pickResource">
+      <h1>Pick a resource to get one of.</h1>
+      <button onclick="addResourceCard('lumber',turn)" class="resourceBtn">Lumber</button>
+      <button onclick="addResourceCard('wool',turn)" class="resourceBtn">Wool</button>
+      <button onclick="addResourceCard('ore',turn)" class="resourceBtn">Ore</button><br><br>
+      <button onclick="addResourceCard('brick',turn)" class="resourceBtn">Brick</button>
+      <button onclick="addResourceCard('grain',turn)" class="resourceBtn">Grain</button>
+    </div>
+    <div id="monopolyResource">
+      <h1>Pick a resource to claim all of.</h1>
+      <button onclick="claimResources('lumber',turn)" class="resourceBtn">Lumber</button>
+      <button onclick="claimResources('wool',turn)" class="resourceBtn">Wool</button>
+      <button onclick="claimResources('ore',turn)" class="resourceBtn">Ore</button><br><br>
+      <button onclick="claimResources('brick',turn)" class="resourceBtn">Brick</button>
+      <button onclick="claimResources('grain',turn)" class="resourceBtn">Grain</button>
     </div>
     <div id="menu"> 
       <h1>

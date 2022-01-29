@@ -47,20 +47,60 @@ var developmentCards = {
 
 function knightCard(p) {
   let player = playerList[p]
+  newRobberLocation = true;
+  player.armySize++
+  document.getElementById("shopButton").disabled = true;  
+  document.getElementById("endTurnButton").disabled = true;
+  document.getElementById("playerCards"+turn).disabled = true;
 }
 
 function roadBuildingCard(p) {
   let player = playerList[p]
+  buy("road",true)
 }
 
 function yearOfPlentyCard(p) {
   let player = playerList[p]
+  addResources = 2;
+  document.getElementById("generalInfo").style.display = "none"
+  document.getElementById("pickResource").style.display = "block"
 }
 
 function monopolyCard(p) {
   let player = playerList[p]
+  
+  document.getElementById("generalInfo").style.display = "none"
+  document.getElementById("monopolyResource").style.display = "block"
 }
 
 function pointCard(p) {
   let player = playerList[p]
+  player.points++
+}
+
+
+
+// pick a resource to get (year of plenty card)
+function addResourceCard(resource, player) {
+  playerList[player].resources[resource]++
+  addResources--
+  if(addResources<=0) {
+    document.getElementById("generalInfo").style.display = "block"
+    document.getElementById("pickResource").style.display = "none"
+  }
+  updateSidebar(turn)
+}
+
+// claim all of a specific resource type (monopoly card)
+function claimResources(resource, gp) {
+  for(let p in playerList) {
+    if(p != gp) {
+      let player = playerList[p]
+      let getPlayer = playerList[gp]
+      getPlayer.resources[resource] += player.resources[resource]
+      player.resources[resource] = 0
+    }
+  }
+  document.getElementById("generalInfo").style.display = "block"
+  document.getElementById("monopolyResource").style.display = "none"
 }
