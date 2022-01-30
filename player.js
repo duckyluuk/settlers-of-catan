@@ -20,7 +20,7 @@ class Player {
     this.longestRoad = 0; // stores how long their longest road is
     this.longestRoadHolder = false; // stores whether or not the player is the one with the longest road
     this.armySize = 0; // size of a players army needed for the biggest army card worth 2 points
-    this.biggestArmyHolder = false; // stores whether or not the player is the one with the biggest army
+    this.largestArmyHolder = false; // stores whether or not the player is the one with the biggest army
     this.points = 0; // stores the total amount of points a player has
   }
 }

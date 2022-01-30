@@ -49,90 +49,12 @@ var playerAmount = 0;
 let robbedPlayers = [];
 let newRobberLocation = false;
 let stealResource = false;
-
-function createTileList(){
-  robberPlaced = false
-  tileList = []
-  roadList = []
-  junctionList = []
-  let redNumberCheck = [];  
-  let diceValueListCopy = [...diceValueList];
-  let fieldTypesCopy = [...fieldTypes];
-  let positions = [
-    [[-3*Math.cos(Math.PI/6),-4.5],[-Math.cos(Math.PI/6),-4.5],[Math.cos(Math.PI/6),-4.5],[3*Math.cos(Math.PI/6),-4.5]],
-    [[-4*Math.cos(Math.PI/6),-3],[-2*Math.cos(Math.PI/6),-3],[0,-3],[2*Math.cos(Math.PI/6),-3],[4*Math.cos(Math.PI/6),-3]],
-    [[-5*Math.cos(Math.PI/6),-1.5],[-3*Math.cos(Math.PI/6),-1.5],[-Math.cos(Math.PI/6),-1.5],[Math.cos(Math.PI/6),-1.5],[3*Math.cos(Math.PI/6),-1.5],[5*Math.cos(Math.PI/6),-1.5]],
-    [[-6*Math.cos(Math.PI/6),0],[-4*Math.cos(Math.PI/6),0],[-2*Math.cos(Math.PI/6),0],[0,0],[2*Math.cos(Math.PI/6),0],[4*Math.cos(Math.PI/6),0],[6*Math.cos(Math.PI/6),0]],
-    [[-5*Math.cos(Math.PI/6),1.5],[-3*Math.cos(Math.PI/6),1.5],[-Math.cos(Math.PI/6),1.5],[Math.cos(Math.PI/6),1.5],[3*Math.cos(Math.PI/6),1.5],[5*Math.cos(Math.PI/6),1.5]],
-    [[-4*Math.cos(Math.PI/6),3],[-2*Math.cos(Math.PI/6),3],[0,3],[2*Math.cos(Math.PI/6),3],[4*Math.cos(Math.PI/6),3]],
-    [[-3*Math.cos(Math.PI/6),4.5],[-Math.cos(Math.PI/6),4.5],[Math.cos(Math.PI/6),4.5],[3*Math.cos(Math.PI/6),4.5]],
-  ]
-  let portTiles = [1,0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,1,0]
-  let portsLeft = ["brick","lumber","ore","grain","wool","general","general","general","general"]
-  let portRotations = [4,4,3,5,2,5,1,0,1]
-  let c = Math.cos(Math.PI/6)
-  let s = Math.sin(Math.PI/6)
-  for(let y=0; y<positions.length; y++) {
-    for(let x=0; x<positions[y].length; x++) {
-      let rotation = 0
-      let fieldType;
-      let randomDiceValue = Math.floor(Math.random()*diceValueListCopy.length)
-      let randomFieldType = Math.floor(Math.random()*fieldTypesCopy.length)   
-      let tradeResource = false;
-      if(y == 0 || x == 0 || y == positions.length-1 || x == positions[y].length-1) {
-        fieldType = "water"
-        if(portTiles.shift()) {
-          fieldType = "port"
-          rotation = portRotations.shift()
-          let tradeIndex = Math.floor(Math.random()*portsLeft.length)
-          
-          tradeResource = portsLeft[tradeIndex]
-          portsLeft.splice(tradeIndex,1)
-        } else rotation=Math.floor(Math.random()*6)
-      } else {
-        randomDiceValue = Math.floor(Math.random()*diceValueListCopy.length)
-        randomFieldType = Math.floor(Math.random()*fieldTypesCopy.length)    
-        fieldType = fieldTypesCopy[randomFieldType];
-      }
-      let tileInfo = tileData[fieldType]
-      let nx = c * positions[y][x][0] + s * positions[y][x][1]
-      let ny = s * positions[y][x][0] - c * positions[y][x][1]
-      tileList.push(new Tile(fieldType, (fieldType == "port" ? tradeResource : tileInfo.resource), ((tileInfo.resource && fieldType != "port") ? diceValueListCopy[randomDiceValue] : false), (fieldType == "port" ? tileInfo.img[tradeResource] : tileInfo.img), tileInfo.color, nx, ny, rotation))
-      if(fieldType != "water" && fieldType != "port") {
-        if(fieldType == "desert"){
-          redNumberCheck.push(0) 
-        } else {
-          redNumberCheck.push(diceValueListCopy[randomDiceValue])
-        }
-        if(tileInfo.resource && fieldType != "port"){
-          if(diceValueListCopy[randomDiceValue]==6 || diceValueListCopy[randomDiceValue] == 8){ // this if statement will prevent two red numbers being next to each other
-            for(var i = 0; i<tileConnections[redNumberCheck.length-1].length;i++){
-              if(tileConnections[redNumberCheck.length-1][i]<tileList.length){
-                if(redNumberCheck[tileConnections[redNumberCheck.length-1][i]] == 6 || redNumberCheck[tileConnections[redNumberCheck.length-1][i]] == 8){
-                  console.log("reset")
-                  createTileList() // restarts the generation
-                  return true;
-                } 
-              }
-            }    
-          }  
-          diceValueListCopy.splice(randomDiceValue,1); 
-        }
-        fieldTypesCopy.splice(randomFieldType,1); 
-      }
-    }
-  }
-  cardStack = []
-  for(let c in developmentCards) {
-    let card = developmentCards[c]
-    for(let i=0; i<card.amount; i++) cardStack.push(card)
-  }
-  cardStack = cardStack
-                .map((value) => ({ value, s: Math.random() }))
-                .sort((a, b) => a.s - b.s)
-                .map(({ value }) => value)
-  console.log(tileList)
-  return true
+let resourceBank = {
+  lumber:19,
+  wool:19,
+  ore:19,
+  brick:19,
+  grain:19
 }
 
 requestAnimationFrame(menu) // start menu loop
@@ -153,97 +75,6 @@ function menu(){
     updateSidebar(turn)
     requestAnimationFrame(game) // start game loop  
   }
-}
-
-function showCards(p) {
-  let player = playerList[p]
-  // idk just show the cards or something
-  let cardDiv = document.getElementById("informationDisplay")
-  cardDiv.style.display = "block"
-  
-  // create the table
-  cardDiv.innerHTML = "<h1>"+player.name+"'s Development Cards</h1>"+
-                       "<table id='cardTable'><tr><th><h2>name</h2></th><th><h2>description</h2></th><th><h2>Use</h2></th></tr></table><br>"
-  // create an element in the table for each card
-  for(let c in player.developmentCards) {
-    let card = player.developmentCards[c]
-    
-    let cardTr = document.createElement("TR")
-    
-    let td1 = document.createElement("TD")
-    td1.innerHTML = card.name
-    let td2 = document.createElement("TD")
-    td2.innerHTML = card.desc
-    let td3 = document.createElement("TD")
-    
-    let useBtn = document.createElement("BUTTON")
-    useBtn.innerHTML = "Use Card"
-    useBtn.onclick = function() {useCard(p, c)}
-    
-    td3.appendChild(useBtn)
-    
-    // add stuff to the table
-    cardTr.appendChild(td1)
-    cardTr.appendChild(td2)
-    cardTr.appendChild(td3)
-    document.getElementById("cardTable").appendChild(cardTr)
-  }
-  let closeBtn = document.createElement("BUTTON")
-  closeBtn.innerHTML = "Close"
-  closeBtn.onclick = function() {cardDiv.style.display = "none"}
-  
-  cardDiv.appendChild(closeBtn)
-}
-
-function useCard(p, index) {
-  let player = playerList[p]
-  console.log(p,index)
-  document.getElementById("informationDisplay").style.display = "none"
-  // use the card
-  player.developmentCards[index].cardFunc(p)
-  // remove the card from the player
-  player.developmentCards.splice(index, 1)
-}
-
-// setup for player amount
-const amountInput = document.getElementById("playerAmount")
-amountInput.onchange=()=>{
-  amountInput.value = Math.round(amountInput.value)
-  if(amountInput.value < 1) amountInput.value = 1
-  if(amountInput.value > 6) amountInput.value = 6
-  // show the player in the list if it fits in the updated amount
-  for(let i=1; i<=6; i++) {
-    if(i<=amountInput.value) {
-      document.getElementById("name"+i).style.display="table-row"
-      document.getElementById("color"+i).style.display="table-row"
-    } else {
-      document.getElementById("name"+i).style.display="none"
-      document.getElementById("color"+i).style.display="none"
-    }
-  }
-}
-
-function setupGame(){
-  let playerAmount = amountInput.value
-  let colorCheck = [];
-  playerList = []
-  // check for duplicate colors
-  for(let i = 1; i<=playerAmount; i++){
-    if(colorCheck.includes(document.getElementById("playerColor"+i).value)) {
-      document.getElementById("errOutput").innerHTML = "You cannot have duplicate colors!" 
-      return;
-    }
-    colorCheck.push(document.getElementById("playerColor"+i).value)
-  }
-  // set the color and name for each player
-  for(let i = 1; i<=playerAmount; i++){
-    let name = document.getElementById("playerName"+i).value
-    let color = document.getElementById("playerColor"+i).value
-    if(name.length < 1) name = "player " + i 
-    playerList.push(new Player(name,color))
-  }  
-  gameStarted = createTileList(); // ends menu loop and starts game loop
-  console.log(gameStarted)
 }
 
 function updateSidebar(turn,playerChange = false) {
@@ -292,135 +123,46 @@ function rollDie(){
   document.getElementById("endTurnButton").disabled = false;
   // dieResult = 7;
   if(dieResult == 7){ // checks if something needs to be done with the robber
-    robbedPlayers = []
-    let totalResources = 0;
-    for(let player in playerList){
-      totalResources = 0;
-      for(let resource in playerList[player].resources){
-        totalResources += playerList[player].resources[resource]
-      }
-      if(totalResources > 7){
-        robbedPlayers.push([player, totalResources, Math.floor(totalResources/2)])
-      }
-    }
-    // robbedPlayers = [[0,1,2]]
-    document.getElementById("placeRobberInfo").style.display="block"
-    document.getElementById("diceRoll").style.display="none"
-    if(robbedPlayers.length!=0){
-      document.getElementById("endTurnButton").disabled = true
-      document.getElementById("shopButton").disabled = true
-      document.getElementById("robberConfirmationButton").disabled = true
-      let robberDiv = document.getElementById("robberDisplay")
-      robberDiv.style.display = "block"
-      let player = robbedPlayers[0][0]
-      document.getElementById("robberPlayer").innerHTML = playerList[player].name
-      document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
-      document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
-      document.getElementById("totalResourcesSelected").innerHTML = 0
-      document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
-      for(let resource in playerList[player].resources){
-        document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
-        document.getElementById(resource + "RobberAmount").value = 0
-        document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
-      }
-    } else {
-      newRobberLocation = true;
-      document.getElementById("shopButton").disabled = true;  
-      document.getElementById("endTurnButton").disabled = true;
-      document.getElementById("playerCards"+turn).disabled = true;
-    }
-    console.log(robbedPlayers)
+    robberActions()
   } else {
-    // loop through all players and their building
+    let resourcePayout = {
+      lumber:0,
+      wool:0,
+      ore:0,
+      brick:0,
+      grain:0
+    }
+    // loop through all players and their building checking if there is enough in the bank   
     for(let player of playerList) {
       for(let building of player.buildings) {
         for(let resource of building.resources) {
           // if the number for the resource is rolled, give the player the resource.
           if(dieResult == resource.num && !building.robber) {
-            player.resources[resource.type] += 1 + +(building.building == "city") // give 2 of the resource if the building is a city
+            resourcePayout[resource.type] += 1 + +(building.building == "city")
+          }
+        }
+      }
+    }
+    console.log(resourcePayout)
+    // loop through all players and their building paying out the resource
+    for(let player of playerList) {
+      for(let building of player.buildings) {
+        for(let resource of building.resources) {
+          // if the number for the resource is rolled, give the player the resource.
+          if(dieResult == resource.num && !building.robber) {
+            if(resourcePayout[resource.type]<=resourceBank[resource.type]){
+              player.resources[resource.type] += 1 + +(building.building == "city") // give 2 of the resource if the building is a city
+              resourceBank[resource.type] -= 1 - -(building.building == "city") 
+              resourcePayout[resource.type] -= 1 - -(building.building == "city")
+            } else {
+              console.log("not enough resources")
+            }
           }
         }
       }
     }
   }
   updateSidebar(turn)
-}
-
-function confirmRobber(){
-  // still not created yet
-  let robberDiv = document.getElementById("robberDisplay")  
-  robberDiv.style.display = "none"
-  let player = robbedPlayers[0][0]
-  for(let resource in playerList[player].resources){
-    console.log(document.getElementById(resource + "RobberAmount").value)
-    playerList[player].resources[resource] -= parseInt(document.getElementById(resource + "RobberAmount").value) 
-  }
-  console.log(player, turn)
-  if(player == turn){
-    updateSidebar(turn)
-  }
-  robbedPlayers.shift()
-  if(robbedPlayers.length == 0){
-    newRobberLocation = true;
-    document.getElementById("placeRobberInfo").style.display="block"
-    document.getElementById("diceRoll").style.display="none"
-  } else { /* could be put in a function cus its double */
-    document.getElementById("robberConfirmationButton").disabled = true
-    robberDiv = document.getElementById("robberDisplay")
-    robberDiv.style.display = "block"
-    player = robbedPlayers[0][0]
-    document.getElementById("robberPlayer").innerHTML = playerList[player].name
-    document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
-    document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
-    document.getElementById("totalResourcesSelected").innerHTML = 0
-    document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
-    for(let resource in playerList[player].resources){
-      document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
-      document.getElementById(resource + "RobberAmount").value = 0
-      document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
-    }
-  }
-}
-
-const lumberRobber = document.getElementById("lumberRobberAmount")
-const woolRobber = document.getElementById("woolRobberAmount")
-const oreRobber = document.getElementById("oreRobberAmount")
-const brickRobber = document.getElementById("brickRobberAmount")
-const grainRobber = document.getElementById("grainRobberAmount")
-
-lumberRobber.onchange=()=>{
-  losingResources("lumber")
-}
-woolRobber.onchange=()=>{
-  losingResources("wool")
-}
-oreRobber.onchange=()=>{
-  losingResources("ore")
-}
-brickRobber.onchange=()=>{
-  losingResources("brick")
-}
-grainRobber.onchange=()=>{
-  losingResources("grain")
-}
-
-function losingResources(resource){
-  amountInput.value = Math.round(amountInput.value)
-  if(isNaN(parseInt(document.getElementById(resource + "RobberAmount").value))) document.getElementById(resource + "RobberAmount").value = 0
-  if(parseInt(document.getElementById(resource + "RobberAmount").value) < 0) document.getElementById(resource + "RobberAmount").value = 0
-  if(parseInt(document.getElementById(resource + "RobberAmount").value) > document.getElementById(resource + "RobberAmount").value) document.getElementById(resource + "RobberAmount").value = document.getElementById(resoure + "RobberAmount").value
-  let totalRobberResources = parseInt(lumberRobber.value) + parseInt(woolRobber.value) + parseInt(oreRobber.value) + parseInt(brickRobber.value) + parseInt(grainRobber.value)
-  if(robbedPlayers[0][2]<totalRobberResources){
-    document.getElementById(resource + "RobberAmount").value = parseInt(document.getElementById(resource + "RobberAmount").value) + robbedPlayers[0][2] - totalRobberResources
-    totalRobberResources = parseInt(lumberRobber.value) + parseInt(woolRobber.value) + parseInt(oreRobber.value) + parseInt(brickRobber.value) + parseInt(grainRobber.value)
-  }
-  document.getElementById("totalResourcesSelected").innerHTML = totalRobberResources
-  document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2] - totalRobberResources
-  if(robbedPlayers[0][2] - totalRobberResources == 0){
-    document.getElementById("robberConfirmationButton").disabled = false
-  } else {
-    document.getElementById("robberConfirmationButton").disabled = true
-  }
 }
 
 function playerSteals(victim,totalResources){
@@ -442,21 +184,6 @@ function playerSteals(victim,totalResources){
   updateSidebar(turn)
 }
 
-
-function showShop(show){
-  // enable or disable shop screen
-  if(show){
-    document.getElementById("diceRoll").style.display="none"
-    document.getElementById("shop").style.display="block"
-    for(var r in playerList[turn].resources){
-      document.getElementById(r+"Amount").innerHTML = playerList[turn].resources[r];
-    }
-  } else {
-    document.getElementById("diceRoll").style.display="block"
-    document.getElementById("shop").style.display="none"
-  }
-}
-
 function winCheck(){
   if(playerList[turn].points >= 10){
     console.log("winner winner chicken dinner")
@@ -473,50 +200,6 @@ function endTurn() {
   document.getElementById("shopButton").disabled = true;  
   document.getElementById("endTurnButton").disabled = true;
   document.getElementById("informationDisplay").style.display = "none"
-}
-
-function buy(item, freeRoad=false) {
-  let cost = buyData[item].cost
-  let canBuy = true;
-  if(!freeRoad) {
-    for(let r in cost) {
-      if(playerList[turn].resources[r] < cost[r]) canBuy = false;
-    } 
-  }
-  
-  if(canBuy) {
-    if(item == "developmentCard") {
-      // remove the items from the player
-      let cost = buyData[item].cost
-      for(let r in cost) playerList[turn].resources[r] -= cost[r]
-      updateSidebar(turn)
-      soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/512131__beezlefm__coins-small-sound.wav?v=1643481304147")
-      showShop(true)
-      // give the card to the player
-      playerList[turn].developmentCards.push(cardStack.shift())
-    } else if(playerList[turn][item+"Left"] > 0) {
-      if(freeRoad) {
-        buyFreeRoads = 2
-        document.getElementById("cancelBuyBtn").style.display = "none"
-      }
-      
-      // if the player has any of the building left, wait for them to place it
-      choosingBuilding = item
-      document.getElementById("buildingType").innerHTML = item
-      document.getElementById("buyData").style.display="block"
-      document.getElementById("shop").style.display="none"
-    }
-    
-  }
-  
-  console.log(canBuy)
-}
-
-// cancel waiting for a building to be placed
-function cancelBuild() {
-  choosingBuilding = false;
-  document.getElementById("buyData").style.display="none"
-  document.getElementById("shop").style.display="block"
 }
 
 function soundEffect(sound){

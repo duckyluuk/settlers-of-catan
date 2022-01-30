@@ -42,7 +42,10 @@ canvas.addEventListener('click', function(e) {
               playerList[turn].points++
               if(!setupPhase) {
                 let cost = buyData[choosingBuilding].cost
-                for(let r in cost) playerList[turn].resources[r] -= cost[r]
+                for(let r in cost){
+                  playerList[turn].resources[r] -= cost[r]
+                  resourceBank[r] += cost[r]                  
+                }
                 choosingBuilding = false;
                 soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
                 document.getElementById("buyData").style.display="none"
@@ -62,7 +65,10 @@ canvas.addEventListener('click', function(e) {
             playerList[turn].cityLeft--;
             playerList[turn].points++
             let cost = buyData[choosingBuilding].cost
-            for(let r in cost) playerList[turn].resources[r] -= cost[r]
+            for(let r in cost){
+              playerList[turn].resources[r] -= cost[r]
+              resourceBank[r] += cost[r]
+            }
             choosingBuilding = false;
             soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
             showShop(true)
@@ -138,7 +144,10 @@ canvas.addEventListener('click', function(e) {
                     buyFreeRoads--
                   } else {
                     let cost = buyData[choosingBuilding].cost
-                    for(let r in cost) playerList[turn].resources[r] -= cost[r]
+                    for(let r in cost){
+                      playerList[turn].resources[r] -= cost[r]
+                      resourceBank[r] += cost[r]
+                    }
                   }
                   if(buyFreeRoads <=0) {
                     choosingBuilding = false;
@@ -181,7 +190,7 @@ canvas.addEventListener('click', function(e) {
         players = [...new Set(players)];
         players = players.sort(function (a, b) {  return a - b;  });
         console.log(players)
-        if(players.length != 0 || (players.length == 1 && players[0] == turn)){
+        if(players.length != 0 && !(players.length == 1 && players[0] == turn)){
           stealResource = true;
           for(let p in players){
             let victim = players[p]
