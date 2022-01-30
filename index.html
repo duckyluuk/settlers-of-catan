@@ -3,11 +3,15 @@
   <head>
     <title>Catan</title>
     <link rel="icon" type="image/x-icon" href="https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/icon.png?v=1643138388697">
-    <script src="script.js" async></script>
+    <script src="developmentCards.js" async></script>
     <script src="data.js" async></script>
+    <script src="setup.js" async></script>
+    <script src="script.js" async></script>
+    <script src="shop.js" async></script>
     <script src="board.js" async></script>
     <script src="player.js" async></script>
-    <script src="developmentCards.js" async></script>
+    <script src="robber.js" async></script>
+    <script src="trading.js" async></script>
     <script src="mouse.js" async></script>    
     <link rel="stylesheet" href="style.css">
 
@@ -181,7 +185,7 @@
       
     </div>
     <div id="robberDisplay">
-      <h1> <span id="robberPlayer"></span> got attacked by the robbor</h1>
+      <h1> <span id="robberPlayer"></span> got attacked by the robber</h1>
       <h2>You have <span id="robberTotal"></span> resources, so you have to give away <span  id="robberLoss"></span></h2>
       <table id="robberTable">
         <tr>
@@ -234,11 +238,11 @@
     </div>
     <div id="pickResource">
       <h1>Pick a resource to get one of.</h1>
-      <button onclick="addResourceCard('lumber',turn)" class="resourceBtn">Lumber</button>
-      <button onclick="addResourceCard('wool',turn)" class="resourceBtn">Wool</button>
-      <button onclick="addResourceCard('ore',turn)" class="resourceBtn">Ore</button><br><br>
-      <button onclick="addResourceCard('brick',turn)" class="resourceBtn">Brick</button>
-      <button onclick="addResourceCard('grain',turn)" class="resourceBtn">Grain</button>
+      <button onclick="addResourceCard('lumber',turn)" class="resourceBtn" id="lumberGetBtn">Lumber</button>
+      <button onclick="addResourceCard('wool',turn)" class="resourceBtn" id="woolGetBtn">Wool</button>
+      <button onclick="addResourceCard('ore',turn)" class="resourceBtn" id="oreGetBtn">Ore</button><br><br>
+      <button onclick="addResourceCard('brick',turn)" class="resourceBtn" id="brickGetBtn">Brick</button>
+      <button onclick="addResourceCard('grain',turn)" class="resourceBtn" id="grainGetBtn">Grain</button>
     </div>
     <div id="monopolyResource">
       <h1>Pick a resource to claim all of.</h1>
@@ -258,7 +262,7 @@
             players:
           </td>
           <td>
-            <input type="number" id="playerAmount" name="playerAmount" min="1" max="6" value="4">
+            <input type="number" id="playerAmount" name="playerAmount" min="2" max="6" value="4">
           </td>
         </tr>
         <tr id="name1">
@@ -410,6 +414,8 @@
           </td>
         </tr>
       </table>
-    </div>      
+    </div>
+    <!-- audio by Maarten Schellekens. Source of audio: https://freemusicarchive.org/music/maarten-schellekens#contact-artist -->
+    <audio id="backgroundMusic" src="https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/Maarten%20Schellekens%20-%20Ethereal%20Meditation.mp3?v=1643553435871"></audio>
   </body>
 </html>
