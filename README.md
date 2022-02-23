@@ -1,1 +1,1 @@
-# settlers-of-catan
+# Settlers of Catan
