@@ -1,59 +1,63 @@
 class Tile{
-  constructor(name,resource,dice,img,color,x,y,rot){
+  constructor(name,resource,dice,img,color,x,y,rot, robber=false, copy=false){
     this.x = x // position of the tile
     this.y = y // position of the tile
     this.rot = rot*Math.PI/3 // rotation of the tile
     this.name = name // stores the tile name
-    this.img = new Image()
-    this.img.src = img // stores the image that will be used to show the tile
+    this.img = img
     this.color = color // just for testing fase, probably will be removed later
     this.resource = resource // stores the resource that the field gives when its value is roled on the dice
     this.dice = dice // what number has to be rolled for this field to give away resources  
-    this.robber = false; // stores whether the robber is on this tile
+    this.robber = robber; // stores whether the robber is on this tile
     
-    if(name == "desert" && !robberPlaced) {
-      this.robber = true;
-      robberPlaced = true;
-    }
-    
-    //setup stuff for adjacent roads/junctions
-    let points = []
-    let a = Math.PI/3
-    for(let i=0; i<6; i++) { 
-      // add the points of the corner of the hexagon to the list of points, round it to 5 decimals
-      points.push([Math.round((Math.cos(a * i)+x)*100000)/100000,Math.round((Math.sin(a * i)+y)*100000)/100000])
-    }
-    for(let p in points) {
-      // set some variables for finding and setting junctions/roads
-      p=+p
-      let tradeResource = resource
-      let point = points[p]
-      let nextPoint = (p+1 < points.length ? points[p+1] : points[0])
-      let floor = (name == "water" || name == "port" ? "water" : "land")
-      if(name == "port") {
-        let r1 = rot+1
-        let r2 = rot+2
-        if(r1 >= 6) r1-=6
-        if(r2 >= 6) r2-=6
-        if(p == r1 || p == r2) {} else tradeResource = false
+    // dont do all this stuff if it's just copying the board
+    if(!copy) {
+      if(name == "desert" && !robberPlaced) {
+        this.robber = true;
+        robberPlaced = true;
       }
-      // add all junctions attached to the tile to the list of junctions
-      let existJunction = junctionList.find(j => (j.x == point[0] && j.y == point[1]))
-      if(existJunction) {
-        if(!existJunction.floorType.includes(floor)) existJunction.floorType.push(floor)
-        if(name == "port" && tradeResource) existJunction.tradeResources.push(tradeResource)
-        else if(name != "water") existJunction.resources.push({type: resource, num: dice})
-      } else junctionList.push(new Junction(point[0],point[1], floor, (name == "port" ? false : {type: resource, num: dice}), (name == "port" ? tradeResource : false)))
-      
-      // add all roads attached to the tile to the list of roads
-      let existRoad = roadList.find(r => (
-                             [r.x1, r.x2].includes(point[0]) && [r.x1, r.x2].includes(nextPoint[0]) && 
-                             [r.y1, r.y2].includes(point[1]) && [r.y1, r.y2].includes(nextPoint[1])
-                      )) 
-      if(existRoad) {
-        if(!existRoad.floorType.includes(floor)) existRoad.floorType.push(floor)
-      } else roadList.push(new Road(point[0],point[1],nextPoint[0],nextPoint[1], floor))
+      //setup stuff for adjacent roads/junctions
+      let points = []
+      let a = Math.PI/3
+      for(let i=0; i<6; i++) { 
+        // add the points of the corner of the hexagon to the list of points, 
+        // round it to 5 decimals
+        points.push([Math.round((Math.cos(a * i)+x)*100000)/100000,Math.round((Math.sin(a * i)+y)*100000)/100000])
+      }
+      for(let p in points) {
+        // set some variables for finding and setting junctions/roads
+        p=+p
+        let tradeResource = resource
+        let point = points[p]
+        let nextPoint = (p+1 < points.length ? points[p+1] : points[0])
+        let floor = (name == "water" || name == "port" ? "water" : "land")
+        if(name == "port") {
+          let r1 = rot+1
+          let r2 = rot+2
+          if(r1 >= 6) r1-=6
+          if(r2 >= 6) r2-=6
+          if(p == r1 || p == r2) {} else tradeResource = false
+        }
+        // add all junctions attached to the tile to the list of junctions
+        let existJunction = junctionList.find(j => (j.x == point[0] && j.y == point[1]))
+        if(existJunction) {
+          if(!existJunction.floorType.includes(floor)) existJunction.floorType.push(floor)
+          if(name == "port" && tradeResource) existJunction.tradeResources.push(tradeResource)
+          else if(name != "water") existJunction.resources.push({type: resource, num: dice})
+        } else junctionList.push(new Junction(point[0],point[1], [floor], (name == "port" ? false : {type: resource, num: dice}), (name == "port" ? tradeResource : false)))
+
+        // add all roads attached to the tile to the list of roads
+        let existRoad = roadList.find(r => (
+                               [r.x1, r.x2].includes(point[0]) && [r.x1, r.x2].includes(nextPoint[0]) && 
+                               [r.y1, r.y2].includes(point[1]) && [r.y1, r.y2].includes(nextPoint[1])
+                        )) 
+        if(existRoad) {
+          if(!existRoad.floorType.includes(floor)) existRoad.floorType.push(floor)
+        } else roadList.push(new Road(point[0],point[1],nextPoint[0],nextPoint[1], [floor]))
+      }
     }
+    
+    
   }
   draw() {
     // position and stuff
@@ -130,7 +134,7 @@ class Tile{
 }
 
 class Road {
-  constructor(sx, sy, fx, fy, floor) {
+  constructor(sx, sy, fx, fy, floorType=[], player=false) {
     // position of the road  
     this.x1 = sx
     this.y1 = sy
@@ -145,8 +149,8 @@ class Road {
     this.p1 = [(sx-cx)*0.4+cx,(sy-cy)*0.4+cy]
     this.p2 = [(fx-cx)*0.4+cx,(fy-cy)*0.4+cy]
     
-    this.player = false 
-    this.floorType = [floor] //land/water
+    this.player = player 
+    this.floorType = [...floorType] //land/water
   } 
   draw() { 
     // position and stuff
@@ -187,18 +191,18 @@ class Road {
 
 
 class Junction {
-  constructor(x,y,floor,resource,tradeResource) {
+  constructor(x,y,floorType,resource,tradeResource,player=false,building=false,resources=[],tradeResources=[]) {
     // positions of the junction
     this.x = x
     this.y = y
-    this.player = false
-    this.building = false
+    this.player = player
+    this.building = building
     
-    this.floorType = [floor] //land/water
+    this.floorType = [...floorType] //land/water
     
     // what resources the junction has available, and wat ports it has access to
-    this.resources = []
-    this.tradeResources = []
+    this.resources = [...resources]
+    this.tradeResources = [...tradeResources]
     if(resource && resource.type) this.resources.push(resource)
     if(tradeResource) this.tradeResources.push(tradeResource)
   }

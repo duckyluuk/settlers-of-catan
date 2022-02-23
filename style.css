@@ -2,6 +2,13 @@ html {
   overflow: hidden;
   height: 100%;
   width: 100%;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
 }
 
 body {
@@ -38,7 +45,7 @@ body {
   margin: 0 auto;
 }
 
-#informationDisplay, #robberDisplay, #pickResource, #monopolyResource {
+#informationDisplay, #robberDisplay, #pickResource, #monopolyResource, #playerTradeDisplay, #acceptTradeDisplay, #winnerDisplay {
   background-color: #000000aa;
   border: 3px solid black;
   position: absolute;
@@ -71,7 +78,7 @@ body {
   border-bottom: 5px solid black;
 }
 
-#cardTable, #robberTable, #resourceStealing {
+#cardTable, #robberTable, #resourceStealing, #requestTradeTable, #tradeAcceptTable {
   width:90%;
   margin:auto;
 }
@@ -92,7 +99,8 @@ body {
 
 #generalInfo {
   width: 100%;
-  height: 30%;
+  height: 50%;
+  overflow-y: auto;
 }
 
 #redDice {
@@ -115,15 +123,7 @@ body {
   border-collapse: collapse;
 }
 
-#dieButton {
-  width:100%
-}
-
-#endTurnButton {
-  width:100%
-}
-
-#shopButton {
+.sidebarButton {
   width:100%
 }
 
@@ -144,6 +144,11 @@ body {
   width: min(100vh/10*3,100vw/3);
   height: min(100vh/10*3/10*6,100vw/3/10*6);
   color: white;
+}
+
+#resourcesInBank{
+  color: white;
+  display: block;
 }
 
 #shop{
@@ -168,4 +173,13 @@ body {
   width: 25%;
   height: 20%;
   font-size: 25px;
+}
+
+#tradeWithBank{
+  display:none;
+  color: white;
+}
+
+table, th, td {
+/*   border: 1px solid white; */
 }

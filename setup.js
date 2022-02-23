@@ -16,7 +16,8 @@ function setupGame(){
     let name = document.getElementById("playerName"+i).value
     let color = document.getElementById("playerColor"+i).value
     if(name.length < 1) name = "player " + i 
-    playerList.push(new Player(name,color))
+    // html injection can be prevent but Lukas refuses to have it
+    playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color))
   }  
   document.getElementById('backgroundMusic').play()
   document.getElementById('backgroundMusic').loop = true
@@ -29,16 +30,18 @@ function setupGame(){
 const amountInput = document.getElementById("playerAmount")
 amountInput.onchange=()=>{
   amountInput.value = Math.round(amountInput.value)
-  if(amountInput.value < 2) amountInput.value = 2
+  if(amountInput.value < 3) amountInput.value = 3
   if(amountInput.value > 6) amountInput.value = 6
   // show the player in the list if it fits in the updated amount
   for(let i=1; i<=6; i++) {
     if(i<=amountInput.value) {
       document.getElementById("name"+i).style.display="table-row"
       document.getElementById("color"+i).style.display="table-row"
+      document.getElementById("computer"+i).style.display="table-row"
     } else {
       document.getElementById("name"+i).style.display="none"
       document.getElementById("color"+i).style.display="none"
+      document.getElementById("computer"+i).style.display="none"
     }
   }
 }
@@ -105,7 +108,7 @@ function createTileList(){
             for(var i = 0; i<tileConnections[redNumberCheck.length-1].length;i++){
               if(tileConnections[redNumberCheck.length-1][i]<tileList.length){
                 if(redNumberCheck[tileConnections[redNumberCheck.length-1][i]] == 6 || redNumberCheck[tileConnections[redNumberCheck.length-1][i]] == 8){
-                  console.log("reset")
+                  // console.log("reset")
                   createTileList() // restarts the generation
                   return true;
                 } 
@@ -127,6 +130,5 @@ function createTileList(){
                 .map((value) => ({ value, s: Math.random() }))
                 .sort((a, b) => a.s - b.s)
                 .map(({ value }) => value)
-  console.log(tileList)
   return true
 }
