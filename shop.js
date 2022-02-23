@@ -30,6 +30,7 @@ function buy(item, freeRoad=false) {
         for(let r in cost){
           playerList[turn].resources[r] -= cost[r]
           resourceBank[r] += cost[r]
+          updateResourcesInBank()
         } 
         updateSidebar(turn)
         soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/512131__beezlefm__coins-small-sound.wav?v=1643481304147")

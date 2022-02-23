@@ -9,9 +9,13 @@ function knightCard(p) {
   // increase the player's army size
   player.armySize++
   
+  disableButtons(true)
+  /*
   document.getElementById("shopButton").disabled = true;  
   document.getElementById("endTurnButton").disabled = true;
   document.getElementById("playerCards"+turn).disabled = true;
+  document.getElementById("bankTrade").disabled = true; */
+  document.getElementById("tradeWithPlayers").disabled = true;
   
   // check if the player now has the largest army
   if(largestArmyPlayer === false && player.armySize >=3) {
@@ -19,14 +23,14 @@ function knightCard(p) {
     largestArmyPlayer = p
     player.largestArmyHolder = true;
     player.points+=2
-  } else {
-    // if someone already has the largest army holder, check if the player's army size is bigger than that of the current largest army holder
+  } else if(largestArmyPlayer !== false) {
+    // if someone already is the largest army holder, check if the player's army size is bigger than that of the current largest army holder
     let largestArmyHolder = playerList[largestArmyPlayer]
     if(player.armySize > largestArmyHolder.armySize) {
       largestArmyHolder.points-=2
-      player.points++
+      player.points+=2
       largestArmyHolder.largestArmyHolder = false;
-      player.largestArmyHolder = ture
+      player.largestArmyHolder = true
     }
   }
   updateSidebar(turn)
@@ -76,6 +80,7 @@ function pointCard(p) {
 function addResourceCard(resource, player) {
   playerList[player].resources[resource]++
   resourceBank[resource]--
+  updateResourcesInBank()
   addResources--
   if(addResources<=0) {
     document.getElementById("generalInfo").style.display = "block"
@@ -106,9 +111,9 @@ function showCards(p) {
   let player = playerList[p]
   let cardDiv = document.getElementById("informationDisplay")
   cardDiv.style.display = "block"
-  
+  console.log(player.color)
   // create the table
-  cardDiv.innerHTML = "<h1>"+player.name+"'s Development Cards</h1>"+
+  cardDiv.innerHTML = "<h1> <span style='color:"+ player.color + "'>" +player.name+"'s </span> Development Cards</h1>"+
                        "<table id='cardTable'><tr><th><h2>name</h2></th><th><h2>description</h2></th><th><h2>Use</h2></th></tr></table><br>"
   // create an element in the table for each card
   for(let c in player.developmentCards) {
@@ -151,4 +156,50 @@ function useCard(p, index) {
   player.developmentCards[index].cardFunc(p)
   // remove the card from the player
   player.developmentCards.splice(index, 1)
+}
+
+
+
+// the data of the different types of development cards
+var developmentCards = {
+  knightCard : {
+    name: "Knight Card",
+    desc : "Move the robber. Steal one resource from the owner of a settlement or city adjacent to the robber's new hex.",
+    amount: 14,
+    immediatelyPlayable: false,
+    img :false,
+    cardFunc: knightCard
+  },
+  roadBuildingCard : {
+    name: "Road Building",
+    desc : "Place 2 new roads as if you had just built them",
+    amount: 2,
+    immediatelyPlayable: false,
+    img : false,
+    cardFunc: roadBuildingCard
+  },
+  yearOfPlentyCard : {
+    name: "Year of Plenty",
+    desc : "Take any 2 resources from the bank. Add them to your hand. They can be 2 of the same resource or 2 different resources.",
+    amount: 2,
+    immediatelyPlayable: false,
+    img : false,
+    cardFunc: yearOfPlentyCard
+  },
+  monopolyCard : {
+    name: "Monopoly",
+    desc : "When you play this card announce 1 type of resource. All other players must give you all of their resources of that type.",
+    amount: 2,
+    immediatelyPlayable: false,
+    img : false    ,
+    cardFunc: monopolyCard
+  },
+  victoryPointCard : {
+    name: "Victory Point",
+    desc : "Reveal this card on your turn if, with it, you reach the number of points required for victory.",
+    amount: 5,
+    immediatelyPlayable: true,
+    img : false,
+    cardFunc: pointCard
+  }
 }

@@ -9,6 +9,12 @@ window.onresize = () => {
 	canvas.height = window.innerHeight
 }
 
+window.onload=()=>{
+  canvas.addEventListener('wheel', zoom)
+  canvas.addEventListener('click', click)
+}
+
+
 let zoomLevel = 1;
 
 let numImage = new Image()
@@ -35,7 +41,6 @@ let buyFreeRoads = 0
 let setupPhase = "settlement";
 let setupAmount = 0;
 let builtSettlement = false;
-
 let robberPlaced = false
 let diceValueList = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
 let fieldTypes = ["hills","hills","hills","forest","forest","forest","forest","mountains","mountains","mountains","fields","fields","fields","fields","pasture","pasture","pasture","pasture","desert"]
@@ -49,6 +54,7 @@ var playerAmount = 0;
 let robbedPlayers = [];
 let newRobberLocation = false;
 let stealResource = false;
+let tradeAcceptingPlayer = false;
 let resourceBank = {
   lumber:19,
   wool:19,
@@ -91,7 +97,8 @@ function updateSidebar(turn,playerChange = false) {
     
     playerDiv.rightDiv.style.display = (turn == p ? "block" : "none")
     playerDiv.style.height = (p == turn ? "50%" : "30%")
-    playerDiv.style.opacity = (p == turn ? "0.9" : "0.5")
+    playerDiv.style.backgroundColor = (p== turn? player.color.substring(0, player.color.length - 1) + ",0.9)" : player.color.substring(0, player.color.length - 1) + ",0.5)")
+    // document.getElementById("tradeWithPlayer"+p).style.display = (p==turn ? "none" : "inline");
   }
   if(playerChange){
     let currentPlayer = document.getElementById("playerInfo"+turn)
@@ -106,7 +113,7 @@ function game(){
   for(let r of roadList) r.draw()
   for(let j of junctionList) j.draw()
   
-  requestAnimationFrame(game)  // restart game loop
+  if(gameStarted) requestAnimationFrame(game)  // restart game loop
 }
 
 function rollDie(){
@@ -118,10 +125,13 @@ function rollDie(){
   // show dice rolls in sidebar
   document.getElementById("redDice").innerHTML = redDice  
   document.getElementById("yellowDice").innerHTML = yellowDice
+  disableButtons(false, "dieButton")
+  /*
   document.getElementById("dieButton").disabled = true;
   document.getElementById("shopButton").disabled = false;  
   document.getElementById("endTurnButton").disabled = false;
-  // dieResult = 7;
+  document.getElementById("bankTrade").disabled = false;
+  document.getElementById("tradeWithPlayers").disabled = false;*/
   if(dieResult == 7){ // checks if something needs to be done with the robber
     robberActions()
   } else {
@@ -154,6 +164,7 @@ function rollDie(){
               player.resources[resource.type] += 1 + +(building.building == "city") // give 2 of the resource if the building is a city
               resourceBank[resource.type] -= 1 - -(building.building == "city") 
               resourcePayout[resource.type] -= 1 - -(building.building == "city")
+              updateResourcesInBank()
             } else {
               console.log("not enough resources")
             }
@@ -177,9 +188,13 @@ function playerSteals(victim,totalResources){
       }
     }
   }
+  disableButtons(false)
+  /*
   document.getElementById("shopButton").disabled = false;  
   document.getElementById("endTurnButton").disabled = false;
-  document.getElementById("playerCards"+turn).disabled = false;
+  document.getElementById("bankTrade").disabled = false;
+  document.getElementById("tradeWithPlayers").disabled = false;
+  document.getElementById("playerCards"+turn).disabled = false; */
   document.getElementById("informationDisplay").style.display = "none"  
   updateSidebar(turn)
 }
@@ -187,8 +202,28 @@ function playerSteals(victim,totalResources){
 function winCheck(){
   if(playerList[turn].points >= 10){
     console.log("winner winner chicken dinner")
+    document.getElementById("winnerPlayer").innerHTML = playerList[turn].name
+    document.getElementById("winnerPlayer").style.color = playerList[turn].color
+    document.getElementById("winnerDisplay").style.display = "block"
+    disableButtons(true)
+    // document.getElementById("shopButton").disabled = false;  
+    // document.getElementById("endTurnButton").disabled = false;
+    // document.getElementById("bankTrade").disabled = false;
+    // document.getElementById("tradeWithPlayers").disabled = false;
+    // document.getElementById("playerCards"+turn).disabled = false;
   } else {
     console.log("no winner")
+  }
+}
+
+function disableButtons(disable, exception = false){
+  document.getElementById("shopButton").disabled = disable;  
+  document.getElementById("endTurnButton").disabled = disable;
+  document.getElementById("bankTrade").disabled = disable;
+  document.getElementById("tradeWithPlayers").disabled = disable;
+  document.getElementById("playerCards"+turn).disabled = disable;
+  if(exception){
+    document.getElementById(exception).disabled = !disable;
   }
 }
 
@@ -196,9 +231,13 @@ function endTurn() {
   // increment turn and update sidebar stuff
   turn = (turn+1)%playerList.length
   updateSidebar(turn, true)
+  disableButtons(true, "dieButton")
+  /*
   document.getElementById("dieButton").disabled = false;
   document.getElementById("shopButton").disabled = true;  
   document.getElementById("endTurnButton").disabled = true;
+  document.getElementById("bankTrade").disabled = true;
+  document.getElementById("tradeWithPlayers").disabled = true; */
   document.getElementById("informationDisplay").style.display = "none"
 }
 
@@ -206,6 +245,12 @@ function soundEffect(sound){
     var audio = new Audio(sound);
     audio.volume = .6;
     audio.play();
+}
+
+function updateResourcesInBank(){
+  for(let r in resourceBank){
+    document.getElementById(r+"InBank").innerHTML = resourceBank[r]
+  }
 }
 
 
@@ -220,4 +265,54 @@ function distToSegment (p, v, w) {
   let t = ((p[0] - v[0]) * (w[0] - v[0]) + (p[1] - v[1]) * (w[1] - v[1])) / l2;
   t = Math.max(0, Math.min(1, t));
   return Math.sqrt(dist2(p, [ v[0] + t * (w[0] - v[0]), v[1] + t * (w[1] - v[1]) ]))
+}
+
+// reset the game
+function resetGame() {
+  gameStarted = false;
+  
+  /* reset important game variables */
+  longestRoadPlayer = false;
+  largestArmyPlayer = false;
+  rolling = true;
+  turn = 0;
+  winner = false;
+  tileList = [];
+  roadList = [];
+  junctionList = [];
+  cardStack = [];
+  
+  // variables that keep track of stuff for development cards
+  addResources = 0
+  buyFreeRoads = 0
+
+  // store how far in the setup phase (placing initial buildings) the game is (set false if setup phase is done)
+  setupPhase = "settlement";
+  setupAmount = 0;
+  builtSettlement = false;
+  robberPlaced = false
+  diceValueList = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
+  fieldTypes = ["hills","hills","hills","forest","forest","forest","forest","mountains","mountains","mountains","fields","fields","fields","fields","pasture","pasture","pasture","pasture","desert"]
+  ileConnections = [[1,3,4],[0,2,4,5],[1,5,6],[0,4,7,8],[0,1,3,5,8,9],[1,2,4,6,9,10],[2,5,10,11],[3,8,12],[3,4,7,9,12,13],[4,5,8,10,13,14],[5,6,9,11,14,15],[6,10,15],[7,8,13,16],[8,9,12,14,16,17],[9,10,13,15,17,18],[10,11,14,18],[12,13,17],[13,14,16,17],[14,15,17]]
+  playerList = [];
+  colorChoices = ["red","blue","white","yellow","green","brown"];
+  gameStarted = false;
+  dieResult = false;
+  choosingBuilding = false;
+  playerAmount = 0;
+  robbedPlayers = [];
+  newRobberLocation = false;
+  stealResource = false;
+  resourceBank = {
+    lumber:19,
+    wool:19,
+    ore:19,
+    brick:19,
+    grain:19
+  }
+  
+  document.getElementById("menu").style.display = "block"
+  document.getElementById("sidebar").style.display = "none"
+  document.getElementById("winnerDisplay").style.display = "none"  
+  requestAnimationFrame(menu)
 }

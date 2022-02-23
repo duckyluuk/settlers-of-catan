@@ -22,15 +22,19 @@ function robberActions() {
       robbedPlayers.push([player, totalResources, Math.floor(totalResources/2)])
     }
   }
-  // robbedPlayers = [[0,1,2]]
   if(robbedPlayers.length!=0){
+    disableButtons(true)
+    /*
     document.getElementById("endTurnButton").disabled = true
+    document.getElementById("bankTrade").disabled = true
     document.getElementById("shopButton").disabled = true
-    document.getElementById("robberConfirmationButton").disabled = true
+    document.getElementById("tradeWithPlayers").disabled = true;*/
+    document.getElementById("robberConfirmationButton").disabled = true 
     let robberDiv = document.getElementById("robberDisplay")
     robberDiv.style.display = "block"
     let player = robbedPlayers[0][0]
     document.getElementById("robberPlayer").innerHTML = playerList[player].name
+    document.getElementById("robberPlayer").style.color = playerList[player].color
     document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
     document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
     document.getElementById("totalResourcesSelected").innerHTML = 0
@@ -42,11 +46,14 @@ function robberActions() {
     }
   } else {
     newRobberLocation = true;
+    disableButtons(true)
+    /*
     document.getElementById("shopButton").disabled = true;  
     document.getElementById("endTurnButton").disabled = true;
-    document.getElementById("playerCards"+turn).disabled = true;
+    document.getElementById("bankTrade").disabled = true
+    document.getElementById("tradeWithPlayers").disabled = true;
+    document.getElementById("playerCards"+turn).disabled = true;*/
     document.getElementById("placeRobberInfo").style.display="block"
-    document.getElementById("diceRoll").style.display="none"
   }
   console.log(robbedPlayers)
 }
@@ -60,6 +67,7 @@ function confirmRobber(){
     console.log(document.getElementById(resource + "RobberAmount").value)
     playerList[player].resources[resource] -= parseInt(document.getElementById(resource + "RobberAmount").value) 
     resourceBank[resource] += parseInt(document.getElementById(resource + "RobberAmount").value)
+    updateResourcesInBank()
   }
   console.log(player, turn)
   if(player == turn){
@@ -69,7 +77,7 @@ function confirmRobber(){
   if(robbedPlayers.length == 0){
     newRobberLocation = true;
     document.getElementById("placeRobberInfo").style.display="block"
-    document.getElementById("diceRoll").style.display="none"
+    // document.getElementById("buttonDiv").style.display="none"
   } else { /* could be put in a function cus its double */
     document.getElementById("robberConfirmationButton").disabled = true
     robberDiv = document.getElementById("robberDisplay")

@@ -12,9 +12,9 @@
     <script src="player.js" async></script>
     <script src="robber.js" async></script>
     <script src="trading.js" async></script>
-    <script src="mouse.js" async></script>    
+    <script src="mouse.js" async></script>
+    <script src="ai.js" async></script> 
     <link rel="stylesheet" href="style.css">
-
   </head>  
   <body>
     <canvas id="game" ></canvas>
@@ -33,27 +33,41 @@
                 1
               </td>
             </tr>
-            <tr id="rollDieTr">
-              <td colspan="2">
-                <button onclick="rollDie()" id="dieButton" disabled="true">
-                  Roll Die
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="2">
-                <button onclick="showShop(true)" id="shopButton" disabled="true">
-                  Show The Shop
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="2">
-                <button onclick="endTurn()" id="endTurnButton" disabled="true">
-                  End Turn
-                </button>
-              </td>
-            </tr>
+              <tr id="rollDieTr">
+                <td colspan="2">
+                  <button onclick="rollDie()" id="dieButton" class="sidebarButton" disabled="true">
+                    Roll Die
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <button onclick="showShop(true)" id="shopButton" class="sidebarButton" disabled="true">
+                    Show The Shop
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <button onclick="showBankTrade(true)" id="bankTrade" class="sidebarButton" disabled="true">
+                    Trade With Bank
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <button onclick="tradeWithPlayers()" id="tradeWithPlayers" class="sidebarButton" disabled="true">
+                    Trade With Players
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <button onclick="endTurn()" id="endTurnButton" class="sidebarButton" disabled="true">
+                    End Turn
+                  </button>
+                </td>
+              </tr>
           </table>
         </div>
         <div id="shop">
@@ -168,6 +182,71 @@
             </tr>
           </table>
         </div>
+        <div id="tradeWithBank">
+          <table>
+            <tr>
+              <th>resource giving</th>
+              <th>resource getting</th>
+            </tr>
+            <tr>
+              <td>
+                <input type="radio" id="lumberTrading" name="bankResourceGiving" value="lumber">
+                <label for="lumberTrading"><span id="lumberTradingAmount">4</span> lumber</label>
+              </td>
+              <td>
+                <input type="radio" id="lumberBankTrading" name="bankResourceTrading" value="lumber">
+                <label for="lumberBankTrading">1 lumber</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="radio" id="woolTrading" name="bankResourceGiving" value="wool">
+                <label for="woolTrading"><span id="woolTradingAmount">4</span> wool</label>
+              </td>
+              <td>
+                <input type="radio" id="woolBankTrading" name="bankResourceTrading" value="wool">
+                <label for="woolBankTrading">1 wool</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="radio" id="oreTrading" name="bankResourceGiving" value="ore">
+                <label for="oreTrading"><span id="oreTradingAmount">4</span> ore</label>
+              </td>
+              <td>
+                <input type="radio" id="oreBankTrading" name="bankResourceTrading" value="ore">
+                <label for="oreBankTrading">1 ore</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="radio" id="brickTrading" name="bankResourceGiving" value="brick">
+                <label for="brickTrading"><span id="brickTradingAmount">4</span> brick</label>
+              </td>
+              <td>
+                <input type="radio" id="brickBankTrading" name="bankResourceTrading" value="brick">
+                <label for="brickBankTrading">1 brick</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="radio" id="grainTrading" name="bankResourceGiving" value="grain">
+                <label for="grainTrading"><span id="grainTradingAmount">4</span> grain</label>
+              </td>
+              <td>
+                <input type="radio" id="grainBankTrading" name="bankResourceTrading" value="grain">
+                <label for="grainBankTrading">1 grain</label>
+              </td>
+            </tr>
+          </table>
+          <button onclick="confirmBankTrade()">
+            Confirm Trade
+          </button>
+          <br/>
+          <button onclick="showBankTrade(false)" id="showBankTradeButton">
+            Close Bank Trade Menu
+          </button>
+        </div>
         <div id="buyData">
           Click on the map to place your <span id="buildingType"></span>.<br><br>
           <button id="cancelBuyBtn" onclick="cancelBuild()">
@@ -179,6 +258,60 @@
             Click a hexagon to move the robber. This cannot be a desert or water tile and cannot be the tile where the robber currently is
           </p>
         </div>
+        <div id="resourcesInBank">
+          <table>
+            <tr>
+              <th>
+                resource
+              </th>
+              <th>
+                amount
+              </th>
+            </tr>
+            <tr>
+              <td>
+                lumber
+              </td>
+              <td id="lumberInBank">
+                19
+              </td>
+            </tr>
+            <tr>
+              <td>
+                wool
+              </td>
+              <td id="woolInBank">
+                19
+              </td>
+            </tr>
+            <tr>
+              <td>
+                ore
+              </td>
+              <td id="oreInBank">
+                19
+              </td>
+            </tr>
+            <tr>
+              <td>
+                brick
+              </td>
+              <td id="brickInBank">
+                19
+              </td>
+            </tr>
+            <tr>
+              <td>
+                grain
+              </td>
+              <td id="grainInBank">
+                19
+              </td>
+            </tr>
+          </table>
+        </div>
+        <br/>
+        <br/>
       </div>
     </div>
     <div id="informationDisplay">
@@ -236,6 +369,131 @@
         confirm your selection
       </button>
     </div>
+    <div id="playerTradeDisplay">
+      <h1> <span id="RequestingPlayer"></span>, what do you want to trade?</h1>
+      <table id="requestTradeTable">
+        <tr>
+          <th>resource</th>
+          <th>amount you have</th>
+          <th>amount you will give</th>
+          <th>amount you want</th>
+        </tr>
+        <tr>
+          <td>lumber</td>
+          <td id="lumberTotalOffer"></td>
+          <td>
+            <input type="number" id="lumberOfferAmount" min="0" value="0">
+          </td>
+          <td>
+            <input type="number" id="lumberRequestAmount" min="0" max="19" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>wool</td>
+          <td id="woolTotalOffer"></td>
+          <td>
+            <input type="number" id="woolOfferAmount" min="0" value="0">
+          </td>
+          <td>
+            <input type="number" id="woolRequestAmount" min="0" max="19" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>ore</td>
+          <td id="oreTotalOffer"></td>
+          <td>
+            <input type="number" id="oreOfferAmount" min="0" value="0">
+          </td>
+          <td>
+            <input type="number" id="oreRequestAmount" min="0" max="19" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>brick</td>
+          <td id="brickTotalOffer"></td>
+          <td>
+            <input type="number" id="brickOfferAmount" min="0" value="0">
+          </td>
+          <td>
+            <input type="number" id="brickRequestAmount" min="0" max="19" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>grain</td>
+          <td id="grainTotalOffer"></td>
+          <td>
+            <input type="number" id="grainOfferAmount" min="0" value="0">
+          </td>
+          <td>
+            <input type="number" id="grainRequestAmount" min="0" max="19" value="0">
+          </td>
+        </tr>
+      </table>
+      <button id="cancelRequestButton" onclick="confirmTradeRequest(false)">
+        cancle the request
+      </button>
+      <button id="confirmRequestButton" onclick="confirmTradeRequest(true)" disabled = "true">
+        confirm the request
+      </button>
+    </div>
+    <div id="acceptTradeDisplay">
+      <h1><span id="tradeAcceptPlayer"></span>, do you want to accept this trade?</h1>
+      <table id="tradeAcceptTable">
+        <tr>
+          <th>
+            resource
+          </th>
+          <th>
+            what you will get
+          </th>
+          <th>
+            what you have
+          </th>
+          <th>
+            what you will give
+          </th>
+        </tr>
+        <tr>
+          <td>lumber</td>
+          <td id="lumberOfferAccept">0</td>
+          <td id="lumberAcceptingTotal">0</td>
+          <td id="lumberRequestAccept">0</td>
+        </tr>
+        <tr>
+          <td>wool</td>
+          <td id="woolOfferAccept">0</td>
+          <td id="woolAcceptingTotal">0</td>
+          <td id="woolRequestAccept">0</td>
+        </tr>
+        <tr>
+          <td>ore</td>
+          <td id="oreOfferAccept">0</td>
+          <td id="oreAcceptingTotal">0</td>
+          <td id="oreRequestAccept">0</td>
+        </tr>
+        <tr>
+          <td>brick</td>
+          <td id="brickOfferAccept">0</td>
+          <td id="brickAcceptingTotal">0</td>
+          <td id="brickRequestAccept">0</td>
+        </tr>
+        <tr>
+          <td>grain</td>
+          <td id="grainOfferAccept">0</td>
+          <td id="grainAcceptingTotal">0</td>
+          <td id="grainRequestAccept">0</td>
+        </tr>
+      </table>
+      <p id="noResourcesAccepting">
+        You do not have have the resources to accept this trade 
+      </p>
+      <button onclick="acceptTrade(false)">
+        deny offer
+      </button>
+      <button id="acceptTrade" onclick="acceptTrade(true)">
+        accept offer
+      </button>
+    </div>
     <div id="pickResource">
       <h1>Pick a resource to get one of.</h1>
       <button onclick="addResourceCard('lumber',turn)" class="resourceBtn" id="lumberGetBtn">Lumber</button>
@@ -252,6 +510,12 @@
       <button onclick="claimResources('brick',turn)" class="resourceBtn">Brick</button>
       <button onclick="claimResources('grain',turn)" class="resourceBtn">Grain</button>
     </div>
+    <div id="winnerDisplay">
+      <h1>Congratulations <span id="winnerPlayer"></span>, You Have Won</h1>
+      <button onclick="resetGame()">
+        Go Back To Home Screen
+      </button>
+    </div>
     <div id="menu"> 
       <h1>
         Web Catan
@@ -262,7 +526,7 @@
             players:
           </td>
           <td>
-            <input type="number" id="playerAmount" name="playerAmount" min="2" max="6" value="4">
+            <input type="number" id="playerAmount" name="playerAmount" min="3" max="6" value="4">
           </td>
         </tr>
         <tr id="name1">
@@ -279,12 +543,23 @@
           </td>
           <td>
             <select name="color" id="playerColor1">
-              <option value="red">red</option>
-              <option value="blue">blue</option>
-              <option value="yellow">yellow</option>
-              <option value="white">white</option>
-              <option value="green">green</option>
-              <option value="brown">brown</option>                
+              <option value="rgb(255,0,0)">red</option>
+              <option value="rgb(0,0,255)">blue</option>
+              <option value="rgb(255,255,0)">yellow</option>
+              <option value="rgb(255,255,255)">white</option>
+              <option value="rgb(0,128,0)">green</option>
+              <option value="rgb(165,42,42)">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="computer1">
+          <td>
+            player or computer?
+          </td>
+          <td>
+            <select name="aiSelection" id="aiSelection1">
+              <option value="player">player</option>
+              <option value="computer">computer</option>
             </select>
           </td>
         </tr>
@@ -302,12 +577,23 @@
           </td>
           <td>
             <select name="color" id="playerColor2">
-              <option value="blue">blue</option>              
-              <option value="red">red</option>
-              <option value="yellow">yellow</option>
-              <option value="white">white</option>
-              <option value="green">green</option>
-              <option value="brown">brown</option>                
+              <option value="rgb(0,0,255)">blue</option>              
+              <option value="rgb(255,0,0)">red</option>
+              <option value="rgb(255,255,0)">yellow</option>
+              <option value="rgb(255,255,255)">white</option>
+              <option value="rgb(0,128,0)">green</option>
+              <option value="rgb(165,42,42)">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="computer2">
+          <td>
+            player or computer?
+          </td>
+          <td>
+            <select name="aiSelection" id="aiSelection2">
+              <option value="player">player</option>
+              <option value="computer">computer</option>
             </select>
           </td>
         </tr>
@@ -325,12 +611,23 @@
           </td>
           <td>
             <select name="color" id="playerColor3">
-              <option value="yellow">yellow</option>              
-              <option value="red">red</option>
-              <option value="blue">blue</option>
-              <option value="white">white</option>
-              <option value="green">green</option>
-              <option value="brown">brown</option>                
+              <option value="rgb(255,255,0)">yellow</option>              
+              <option value="rgb(255,0,0)">red</option>
+              <option value="rgb(0,0,255)">blue</option>
+              <option value="rgb(255,255,255)">white</option>
+              <option value="rgb(0,128,0)">green</option>
+              <option value="rgb(165,42,42)">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="computer3">
+          <td>
+            player or computer?
+          </td>
+          <td>
+            <select name="aiSelection" id="aiSelection3">
+              <option value="player">player</option>
+              <option value="computer">computer</option>
             </select>
           </td>
         </tr>
@@ -348,12 +645,23 @@
           </td>
           <td>
             <select name="color" id="playerColor4">
-              <option value="white">white</option>              
-              <option value="red">red</option>
-              <option value="blue">blue</option>
-              <option value="yellow">yellow</option>
-              <option value="green">green</option>
-              <option value="brown">brown</option>                
+              <option value="rgb(255,255,255)">white</option>              
+              <option value="rgb(255,0,0)">red</option>
+              <option value="rgb(0,0,255)">blue</option>
+              <option value="rgb(255,255,0)">yellow</option>
+              <option value="rgb(0,128,0)">green</option>
+              <option value="rgb(165,42,42)">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="computer4">
+          <td>
+            player or computer?
+          </td>
+          <td>
+            <select name="aiSelection" id="aiSelection4">
+              <option value="player">player</option>
+              <option value="computer">computer</option>
             </select>
           </td>
         </tr>
@@ -371,12 +679,23 @@
           </td>
           <td>
             <select name="color" id="playerColor5">
-              <option value="green">green</option>              
-              <option value="red">red</option>
-              <option value="blue">blue</option>
-              <option value="yellow">yellow</option>
-              <option value="white">white</option>
-              <option value="brown">brown</option>                
+              <option value="rgb(0,128,0)">green</option>              
+              <option value="rgb(255,0,0)">red</option>
+              <option value="rgb(0,0,255)">blue</option>
+              <option value="rgb(255,255,0)">yellow</option>
+              <option value="rgb(255,255,255)">white</option>
+              <option value="rgb(165,42,42)">brown</option>                
+            </select>
+          </td>
+        </tr>
+        <tr id="computer5" style="display:none;">
+          <td>
+            player or computer?
+          </td>
+          <td>
+            <select name="aiSelection" id="aiSelection5">
+              <option value="player">player</option>
+              <option value="computer">computer</option>
             </select>
           </td>
         </tr>
@@ -394,12 +713,23 @@
           </td>
           <td>
             <select name="color" id="playerColor6">
-              <option value="brown">brown</option>                              
-              <option value="red">red</option>
-              <option value="blue">blue</option>
-              <option value="yellow">yellow</option>
-              <option value="white">white</option>
-              <option value="green">green</option>
+              <option value="rgb(165,42,42)">brown</option>                              
+              <option value="rgb(255,0,0)">red</option>
+              <option value="rgb(0,0,255)">blue</option>
+              <option value="rgb(255,255,0)">yellow</option>
+              <option value="rgb(255,255,255)">white</option>
+              <option value="rgb(0,128,0)">green</option>
+            </select>
+          </td>
+        </tr>
+        <tr id="computer6" style="display:none;">
+          <td>
+            player or computer?
+          </td>
+          <td>
+            <select name="aiSelection" id="aiSelection6">
+              <option value="player">player</option>
+              <option value="computer">computer</option>
             </select>
           </td>
         </tr>

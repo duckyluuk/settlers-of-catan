@@ -37,93 +37,63 @@ let buyData = {
 var tileData = {
   hills: {
     resource: "brick",
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/brick_tile.png",
+    img: new Image(),
     color: "red"
   },
   forest : {
     resource: "lumber",
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/lumber_tile.png",
+    img: new Image(),
     color: "green"
   },
   mountains: {
     resource: "ore",
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/ore_tile.png",
+    img: new Image(),
     color: "grey"
   },
   fields: {
     resource: "grain",
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/wheat_tile.png",
+    img: new Image(),
     color: "yellow"
   },
   pasture: {
     resource: "wool",
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/sheep_tile.png",
+    img: new Image(),
     color: "lightgreen"
   },
   desert: {
     resource: false,
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/desert_tile.png",
+    img: new Image(),
     color: "rgb(247,244,216)"
   },
   water: {
     resource: false,
-    img: "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/ocean_tile.png",
+    img: new Image(),
     color: "aqua"
   },
   port: {
     resource: false,
     img: {
-      "brick": "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_brick_tile.png",
-      "lumber": "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_lumber_tile.png",
-      "ore": "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_ore_tile.png",
-      "grain": "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_wheat_tile.png",
-      "wool": "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_sheep_tile.png",
-      "general": "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_general_tile.png"
+      "brick": new Image(),
+      "lumber": new Image(),
+      "ore": new Image(),
+      "grain": new Image(),
+      "wool": new Image(),
+      "general": new Image()
     },
     color: "blue"
   }
 }
 
-// the data of the different types of development cards
-var developmentCards = {
-  knightCard : {
-    name: "Knight Card",
-    desc : "Move the robber. Steal one resource from the owner of a settlement or city adjacent to the robber's new hex.",
-    amount: 14,
-    immediatelyPlayable: false,
-    img :false,
-    cardFunc: knightCard
-  },
-  roadBuildingCard : {
-    name: "Road Building",
-    desc : "Place 2 new roads as if you had just built them",
-    amount: 2,
-    immediatelyPlayable: false,
-    img : false,
-    cardFunc: roadBuildingCard
-  },
-  yearOfPlentyCard : {
-    name: "Year of Plenty",
-    desc : "Take any 2 resources from the bank. Add them to your hand. They can be 2 of the same resource or 2 different resources.",
-    amount: 2,
-    immediatelyPlayable: false,
-    img : false,
-    cardFunc: yearOfPlentyCard
-  },
-  monopolyCard : {
-    name: "Monopoly",
-    desc : "When you play this card announce 1 type of resource. All other players must give you all of their resources of that type.",
-    amount: 2,
-    immediatelyPlayable: false,
-    img : false    ,
-    cardFunc: monopolyCard
-  },
-  victoryPointCard : {
-    name: "Victory Point",
-    desc : "Reveal this card on your turn if, with it, you reach the number of points required for victory.",
-    amount: 5,
-    immediatelyPlayable: true,
-    img : false,
-    cardFunc: pointCard
-  }
-}
+tileData.hills.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/brick_tile.png"
+tileData.forest.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/lumber_tile.png" 
+tileData.mountains.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/ore_tile.png" 
+tileData.fields.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/wheat_tile.png" 
+tileData.pasture.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/sheep_tile.png" 
+tileData.desert.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/desert_tile.png" 
+tileData.water.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/ocean_tile.png" 
+tileData.port.img["brick"].src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_brick_tile.png" 
+tileData.port.img["lumber"].src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_lumber_tile.png" 
+tileData.port.img["ore"].src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_ore_tile.png" 
+tileData.port.img["grain"].src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_wheat_tile.png" 
+tileData.port.img["wool"].src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_sheep_tile.png" 
+tileData.port.img["general"].src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/port_general_tile.png" 

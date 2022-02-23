@@ -1,12 +1,11 @@
+function zoom(e) {
+  if(e.deltaY < 0) zoomLevel += 0.05
+  if(e.deltaY > 0) zoomLevel -= 0.05
+  if(zoomLevel < 0.5) zoomLevel = 0.5
+  if(zoomLevel > 2) zoomLevel = 2
+}
 
-canvas.addEventListener('wheel', function(e) {
-    if(e.deltaY < 0) zoomLevel += 0.05
-    if(e.deltaY > 0) zoomLevel -= 0.05
-    if(zoomLevel < 0.5) zoomLevel = 0.5
-    if(zoomLevel > 2) zoomLevel = 2
-})
-
-canvas.addEventListener('click', function(e) {
+function click(e) {
   let clicked = false;
   
   for(let j of junctionList) {
@@ -36,6 +35,15 @@ canvas.addEventListener('click', function(e) {
             if(setupPhase == "settlement" || choosingBuilding == "settlement") {
               if(setupPhase == "settlement") setupPhase = "road"
               j.player = turn;
+              if(j.tradeResources.length !== 0){
+                if(j.tradeResources[0] == "general"){
+                  for(r in playerList[turn].trades){
+                    if(playerList[turn].trades[r]==4) playerList[turn].trades[r] = 3
+                  }
+                } else {
+                  playerList[turn].trades[j.tradeResources[0]] = 2
+                }
+              }
               j.building = "settlement"
               playerList[turn].buildings.push(j)
               playerList[turn].settlementLeft--
@@ -44,13 +52,24 @@ canvas.addEventListener('click', function(e) {
                 let cost = buyData[choosingBuilding].cost
                 for(let r in cost){
                   playerList[turn].resources[r] -= cost[r]
-                  resourceBank[r] += cost[r]                  
+                  resourceBank[r] += cost[r] 
+                  updateResourcesInBank()
                 }
                 choosingBuilding = false;
                 soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
                 document.getElementById("buyData").style.display="none"
                 document.getElementById("shop").style.display="block"
               } else {
+                if(setupAmount > 0) {
+                  for(let r of j.resources) {
+                    if(r.type){
+                      playerList[turn].resources[r.type]++
+                      resourceBank[r.type]-- 
+                    }
+                  } 
+                  updateSidebar(turn)
+                  updateResourcesInBank()
+                }
                 builtSettlement = j
                 soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
               }       
@@ -68,6 +87,7 @@ canvas.addEventListener('click', function(e) {
             for(let r in cost){
               playerList[turn].resources[r] -= cost[r]
               resourceBank[r] += cost[r]
+              updateResourcesInBank()
             }
             choosingBuilding = false;
             soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
@@ -119,6 +139,8 @@ canvas.addEventListener('click', function(e) {
                 r.player = turn;
                 playerList[turn].roads.push(r)
                 playerList[turn].roadLeft--
+                updateLongestRoad()
+                
                 if(setupAmount === 0) turn++;
                 else turn--;
                 document.getElementById("informationDisplay").style.display = "none"
@@ -138,6 +160,8 @@ canvas.addEventListener('click', function(e) {
                   r.player = turn;
                   playerList[turn].roads.push(r)
                   playerList[turn].roadLeft--
+                  updateLongestRoad()
+                  
                   updateSidebar(turn, true)
                   soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
                   if(buyFreeRoads > 0) {
@@ -147,6 +171,7 @@ canvas.addEventListener('click', function(e) {
                     for(let r in cost){
                       playerList[turn].resources[r] -= cost[r]
                       resourceBank[r] += cost[r]
+                      updateResourcesInBank()
                     }
                   }
                   if(buyFreeRoads <=0) {
@@ -189,7 +214,6 @@ canvas.addEventListener('click', function(e) {
         let players = points.map(p => junctionList.find(j => (j.x == p[0] && j.y == p[1])).player).filter(p => p!==false)
         players = [...new Set(players)];
         players = players.sort(function (a, b) {  return a - b;  });
-        console.log(players)
         if(players.length != 0 && !(players.length == 1 && players[0] == turn)){
           stealResource = true;
           for(let p in players){
@@ -206,13 +230,82 @@ canvas.addEventListener('click', function(e) {
           document.getElementById("informationDisplay").style.display = "block"
           document.getElementById("informationDisplay").innerHTML = output
         } else {
+          disableButtons(false)
+          /*
           document.getElementById("shopButton").disabled = false;  
           document.getElementById("endTurnButton").disabled = false;
+          document.getElementById("bankTrade").disabled = false;
+          document.getElementById("tradeWithPlayers").disabled = false;
           document.getElementById("playerCards"+turn).disabled = false;  
+          */
         }
         document.getElementById("placeRobberInfo").style.display="none"
-        document.getElementById("diceRoll").style.display="block"
       } 
     }
   }
-});
+}
+  
+// update the longest road length for each player
+function updateLongestRoad() {
+  // loop through all roads owned by a player
+  for(let road of roadList) {
+    if(road.player !== false) {
+      // find the length for that road
+      let player = road.player
+      let roadLen = checkLongestRoad(player, road)
+      
+      // update the longest road for the player
+      if(roadLen > playerList[player].longestRoad) playerList[player].longestRoad = roadLen
+      // update the person who holds the longest road if the road is longer
+      if(longestRoadPlayer === false && playerList[player].longestRoad >=5) {
+        // if no one has the largest road yet and the player's road length is 5 or more, they are now the longest road holder
+        longestRoadPlayer = player
+        playerList[player].longestRoadHolder = true;
+        playerList[player].points+=2
+      } else if(longestRoadPlayer !== false) {
+        // if someone already has the longest road, check if the player's road length is bigger than that of the current longest road
+        let longestRoadHolder = playerList[longestRoadPlayer]
+        if(playerList[player].longestRoad > longestRoadHolder.longestRoad) {
+          longestRoadHolder.points-=2
+          playerList[player].points+=2
+          longestRoadHolder.longestRoadHolder = false;
+          playerList[player].longestRoadHolder = true
+        }
+      }
+    }
+  }
+  updateSidebar()
+}
+
+// find the longst road a player has
+function checkLongestRoad(p, r, l=0, checked=[], j=false) {
+  let adjacentJunctions = [junctionList.find(j => j.x == r.x1 && j.y == r.y1), junctionList.find(j => j.x == r.x2 && j.y == r.y2)]
+  if(j) {
+    adjacentJunctions = adjacentJunctions.filter(junc => j!=junc)
+    if(j.player !== p && j.player !== false) return l;
+  }
+  let adjacentRoads = []
+  
+  let oldL = l
+  
+  //find the other roads attached to this road
+  for(let j of adjacentJunctions) {
+    if(j.player === turn) canBuild = true;
+    adjacentRoads = [...adjacentRoads, ...roadList.filter(r => (r.x1 == j.x && r.y1 == j.y) || (r.x2 == j.x && r.y2 == j.y)).filter(road => road!=r)]
+  }
+  let best = l
+  // loop through all roads next to the junction(s)
+  for(let roadI in adjacentRoads) {
+    let road = adjacentRoads[roadI]
+    // if the road wasnt checked yet and if it is owned by the player, continue the path that way
+    if(!checked.includes(r.x1+"_"+r.y1+"_"+r.x2+"_"+r.y2) && r.player === p) {
+      let nj = adjacentJunctions[(roadI < 2 ? 0 : 1)]
+      // make a copy of the array of checked roads for each possible path from here
+      let checkedCopy = [...checked, r.x1+"_"+r.y1+"_"+r.x2+"_"+r.y2]
+      // check if the new path is better than the old path
+      best = Math.max(checkLongestRoad(p, road, l+1, checkedCopy, nj), best)
+    }
+    
+  }
+  return best;
+}
