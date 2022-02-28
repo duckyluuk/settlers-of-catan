@@ -15,9 +15,15 @@ function setupGame(){
   for(let i = 1; i<=playerAmount; i++){
     let name = document.getElementById("playerName"+i).value
     let color = document.getElementById("playerColor"+i).value
+    let computerSelection = document.getElementById("aiSelection"+i).value
     if(name.length < 1) name = "player " + i 
-    // html injection can be prevent but Lukas refuses to have it
-    playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color))
+    if(computerSelection == "computer"){
+      playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color,true))
+      aiList.push(new AI(i-1,0,0,0,0))
+    } else {
+      // html injection can be prevent but Lukas refuses to have it
+      playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color))
+    }
   }  
   document.getElementById('backgroundMusic').play()
   document.getElementById('backgroundMusic').loop = true

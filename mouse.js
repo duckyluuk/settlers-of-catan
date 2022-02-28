@@ -7,7 +7,7 @@ function zoom(e) {
 
 function click(e) {
   let clicked = false;
-  
+  if(playerList[turn].ai) return // prevents building during bot round
   for(let j of junctionList) {
     let canBuild = false;
     // allow player to build in setup phase
@@ -62,7 +62,7 @@ function click(e) {
               } else {
                 if(setupAmount > 0) {
                   for(let r of j.resources) {
-                    if(r.type){
+                    if(r.type && r.type != "general"){
                       playerList[turn].resources[r.type]++
                       resourceBank[r.type]-- 
                     }
@@ -92,6 +92,7 @@ function click(e) {
             choosingBuilding = false;
             soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
             showShop(true)
+            updateSidebar(turn) 
             document.getElementById("buyData").style.display="none"
             document.getElementById("shop").style.display="block"
             winCheck();
@@ -152,7 +153,10 @@ function click(e) {
                 if(turn < 0) {
                   turn = 0;
                   setupPhase = false;
-                  document.getElementById("dieButton").disabled = false;
+                  setupAmount++ 
+                  if(!playerList[0].ai){
+                    document.getElementById("dieButton").disabled = false;
+                  }
                 } else setupPhase = "settlement"
                 updateSidebar(turn, true)
               } else {
@@ -177,6 +181,7 @@ function click(e) {
                   if(buyFreeRoads <=0) {
                     choosingBuilding = false;
                     showShop(true)
+                    updateSidebar(turn) 
                     document.getElementById("buyData").style.display="none"
                     document.getElementById("shop").style.display="block"
                     document.getElementById("cancelBuyBtn").style.display = "block"
@@ -266,6 +271,7 @@ function updateLongestRoad() {
         // if someone already has the longest road, check if the player's road length is bigger than that of the current longest road
         let longestRoadHolder = playerList[longestRoadPlayer]
         if(playerList[player].longestRoad > longestRoadHolder.longestRoad) {
+          longestRoadPlayer = player
           longestRoadHolder.points-=2
           playerList[player].points+=2
           longestRoadHolder.longestRoadHolder = false;

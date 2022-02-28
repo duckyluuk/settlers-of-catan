@@ -117,6 +117,9 @@ function acceptTrade(accepted){
     return;
   }
   tradeAcceptingPlayer += 1
+  if(tradeAcceptingPlayer == turn){
+    tradeAcceptingPlayer += 1
+  }
   if(tradeAcceptingPlayer >= playerList.length){
     document.getElementById("acceptTradeDisplay").style.display = "none"
     disableButtons(false)
