@@ -46,6 +46,7 @@ let diceValueList = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
 let fieldTypes = ["hills","hills","hills","forest","forest","forest","forest","mountains","mountains","mountains","fields","fields","fields","fields","pasture","pasture","pasture","pasture","desert"]
 let tileConnections = [[1,3,4],[0,2,4,5],[1,5,6],[0,4,7,8],[0,1,3,5,8,9],[1,2,4,6,9,10],[2,5,10,11],[3,8,12],[3,4,7,9,12,13],[4,5,8,10,13,14],[5,6,9,11,14,15],[6,10,15],[7,8,13,16],[8,9,12,14,16,17],[9,10,13,15,17,18],[10,11,14,18],[12,13,17],[13,14,16,17],[14,15,17]]
 let playerList = [];
+let aiList = [];
 let colorChoices = ["red","blue","white","yellow","green","brown"];
 let gameStarted = false;
 let dieResult = false;
@@ -55,6 +56,7 @@ let robbedPlayers = [];
 let newRobberLocation = false;
 let stealResource = false;
 let tradeAcceptingPlayer = false;
+let win = false;
 let resourceBank = {
   lumber:19,
   wool:19,
@@ -77,7 +79,9 @@ function menu(){
     document.getElementById("menu").style.display = "none"
     document.getElementById("sidebar").style.display = "block"
     createPlayerInfo()
-    
+    if(playerList[0].ai){
+      aiList[0].startTurn()
+    }
     updateSidebar(turn)
     requestAnimationFrame(game) // start game loop  
   }
@@ -87,7 +91,6 @@ function updateSidebar(turn,playerChange = false) {
   for(let p in playerList) {
     let player = playerList[p]
     let playerDiv = document.getElementById("playerInfo"+p)
-    
     document.getElementById("playerPoints"+p).innerHTML = player.points
     
     playerDiv.resources.innerHTML = ""
@@ -98,11 +101,18 @@ function updateSidebar(turn,playerChange = false) {
     playerDiv.rightDiv.style.display = (turn == p ? "block" : "none")
     playerDiv.style.height = (p == turn ? "50%" : "30%")
     playerDiv.style.backgroundColor = (p== turn? player.color.substring(0, player.color.length - 1) + ",0.9)" : player.color.substring(0, player.color.length - 1) + ",0.5)")
-    // document.getElementById("tradeWithPlayer"+p).style.display = (p==turn ? "none" : "inline");
   }
   if(playerChange){
     let currentPlayer = document.getElementById("playerInfo"+turn)
     currentPlayer.scrollIntoView({behavior: "smooth", block: "end", inline: "center"});
+    if(playerList[turn].ai && setupPhase){
+      setTimeout(function() {
+      console.log(aiList.find(ai => ai.i == turn))
+      aiList.find(ai => ai.i == turn).startTurn()
+      }, 1)
+      // console.log()
+      // playerList[turn].ai.startTurn()
+    }
   }
 }
 
@@ -153,7 +163,7 @@ function rollDie(){
         }
       }
     }
-    console.log(resourcePayout)
+    //console.log(resourcePayout)
     // loop through all players and their building paying out the resource
     for(let player of playerList) {
       for(let building of player.buildings) {
@@ -205,6 +215,7 @@ function winCheck(){
     document.getElementById("winnerPlayer").innerHTML = playerList[turn].name
     document.getElementById("winnerPlayer").style.color = playerList[turn].color
     document.getElementById("winnerDisplay").style.display = "block"
+    win = true
     disableButtons(true)
     // document.getElementById("shopButton").disabled = false;  
     // document.getElementById("endTurnButton").disabled = false;
@@ -217,17 +228,21 @@ function winCheck(){
 }
 
 function disableButtons(disable, exception = false){
+  if(playerList[turn].ai){ // prevents clickable buttons when bot is playing
+    disable = true
+  }
   document.getElementById("shopButton").disabled = disable;  
   document.getElementById("endTurnButton").disabled = disable;
   document.getElementById("bankTrade").disabled = disable;
   document.getElementById("tradeWithPlayers").disabled = disable;
   document.getElementById("playerCards"+turn).disabled = disable;
-  if(exception){
+  if(exception && !playerList[turn].ai){
     document.getElementById(exception).disabled = !disable;
   }
 }
 
 function endTurn() {
+  updateLongestRoad()
   // increment turn and update sidebar stuff
   turn = (turn+1)%playerList.length
   updateSidebar(turn, true)
@@ -239,6 +254,14 @@ function endTurn() {
   document.getElementById("bankTrade").disabled = true;
   document.getElementById("tradeWithPlayers").disabled = true; */
   document.getElementById("informationDisplay").style.display = "none"
+  if(playerList[turn].ai && !win){
+    setTimeout(function() {
+    //console.log(aiList.find(ai => ai.i == turn))
+    aiList.find(ai => ai.i == turn).startTurn()
+    }, 1)
+    // console.log()
+    // playerList[turn].ai.startTurn()
+  }
 }
 
 function soundEffect(sound){
@@ -293,8 +316,9 @@ function resetGame() {
   robberPlaced = false
   diceValueList = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
   fieldTypes = ["hills","hills","hills","forest","forest","forest","forest","mountains","mountains","mountains","fields","fields","fields","fields","pasture","pasture","pasture","pasture","desert"]
-  ileConnections = [[1,3,4],[0,2,4,5],[1,5,6],[0,4,7,8],[0,1,3,5,8,9],[1,2,4,6,9,10],[2,5,10,11],[3,8,12],[3,4,7,9,12,13],[4,5,8,10,13,14],[5,6,9,11,14,15],[6,10,15],[7,8,13,16],[8,9,12,14,16,17],[9,10,13,15,17,18],[10,11,14,18],[12,13,17],[13,14,16,17],[14,15,17]]
+  tileConnections = [[1,3,4],[0,2,4,5],[1,5,6],[0,4,7,8],[0,1,3,5,8,9],[1,2,4,6,9,10],[2,5,10,11],[3,8,12],[3,4,7,9,12,13],[4,5,8,10,13,14],[5,6,9,11,14,15],[6,10,15],[7,8,13,16],[8,9,12,14,16,17],[9,10,13,15,17,18],[10,11,14,18],[12,13,17],[13,14,16,17],[14,15,17]]
   playerList = [];
+  aiList = [];
   colorChoices = ["red","blue","white","yellow","green","brown"];
   gameStarted = false;
   dieResult = false;
@@ -303,6 +327,7 @@ function resetGame() {
   robbedPlayers = [];
   newRobberLocation = false;
   stealResource = false;
+  win = false;
   resourceBank = {
     lumber:19,
     wool:19,

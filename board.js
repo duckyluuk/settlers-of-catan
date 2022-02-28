@@ -2,7 +2,7 @@ class Tile{
   constructor(name,resource,dice,img,color,x,y,rot, robber=false, copy=false){
     this.x = x // position of the tile
     this.y = y // position of the tile
-    this.rot = rot*Math.PI/3 // rotation of the tile
+    this.rot = rot*(copy ? 1 : Math.PI/3) // rotation of the tile
     this.name = name // stores the tile name
     this.img = img
     this.color = color // just for testing fase, probably will be removed later

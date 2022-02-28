@@ -18,14 +18,23 @@ class Player {
     this.points = points; // stores the total amount of points a player has
   }
   copy(c) {
-    let playerCopy = new Player(this.name,this.color,this.ai,true,this.resources,this.trades,this.cityLeft,this.settlementLeft,this.roadLeft,
+    let playerCopy = new Player(this.name,this.color,this.ai,true,{...this.resources},{...this.trades},this.cityLeft,this.settlementLeft,this.roadLeft,
                                 this.longestRoad,this.longestRoadHolder,this.armySize,this.largestArmyHolder,this.points)
     
-    for(let i of this.developmentCards) playerCopy.developmentCards.push({...this.developmentCards[i]})
-    
-    for(let r of this.roads) playerCopy.roads.push(c.roadList[roadList.indexOf(r)])
-    for(let j of this.buildings) playerCopy.buildings.push(c.junctionList[junctionList.indexOf(j)])
-    
+    for(let i of this.developmentCards){
+      // playerCopy.developmentCards.push({...this.developmentCards[i]}) 
+      playerCopy.developmentCards.push(JSON.parse(JSON.stringify(i)))
+    }
+    // console.log(this.developmentCards)
+    for(let r of this.roads){
+      // playerCopy.roads.push(c.roadList[roadList.indexOf(r)])  
+      playerCopy.roads.push(JSON.parse(JSON.stringify(r)))                              
+    }
+    for(let j of this.buildings){
+      playerCopy.buildings.push(JSON.parse(JSON.stringify(j)))
+      //c.junctionList[junctionList.indexOf(j)])
+    }
+    //console.log(this.buildings,playerCopy.buildings)
     return playerCopy
   }
 }

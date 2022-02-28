@@ -29,21 +29,26 @@ function robberActions() {
     document.getElementById("bankTrade").disabled = true
     document.getElementById("shopButton").disabled = true
     document.getElementById("tradeWithPlayers").disabled = true;*/
-    document.getElementById("robberConfirmationButton").disabled = true 
-    let robberDiv = document.getElementById("robberDisplay")
-    robberDiv.style.display = "block"
     let player = robbedPlayers[0][0]
-    document.getElementById("robberPlayer").innerHTML = playerList[player].name
-    document.getElementById("robberPlayer").style.color = playerList[player].color
-    document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
-    document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
-    document.getElementById("totalResourcesSelected").innerHTML = 0
-    document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
-    for(let resource in playerList[player].resources){
-      document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
-      document.getElementById(resource + "RobberAmount").value = 0
-      document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
-    }
+    if(playerList[player].ai){
+      aiList.find(ai => ai.i == robbedPlayers[0][0]).robberLosing(robbedPlayers[0][2]) // does the robbing for a computer
+      confirmRobber()
+    } else {
+      document.getElementById("robberConfirmationButton").disabled = true 
+      let robberDiv = document.getElementById("robberDisplay")
+      robberDiv.style.display = "block"
+      document.getElementById("robberPlayer").innerHTML = playerList[player].name
+      document.getElementById("robberPlayer").style.color = playerList[player].color
+      document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
+      document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
+      document.getElementById("totalResourcesSelected").innerHTML = 0
+      document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
+      for(let resource in playerList[player].resources){
+        document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
+        document.getElementById(resource + "RobberAmount").value = 0
+        document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
+      }
+    } 
   } else {
     newRobberLocation = true;
     disableButtons(true)
@@ -63,11 +68,13 @@ function confirmRobber(){
   let robberDiv = document.getElementById("robberDisplay")  
   robberDiv.style.display = "none"
   let player = robbedPlayers[0][0]
-  for(let resource in playerList[player].resources){
-    console.log(document.getElementById(resource + "RobberAmount").value)
-    playerList[player].resources[resource] -= parseInt(document.getElementById(resource + "RobberAmount").value) 
-    resourceBank[resource] += parseInt(document.getElementById(resource + "RobberAmount").value)
-    updateResourcesInBank()
+  if(!playerList[player].ai){
+    for(let resource in playerList[player].resources){
+      console.log(document.getElementById(resource + "RobberAmount").value)
+      playerList[player].resources[resource] -= parseInt(document.getElementById(resource + "RobberAmount").value) 
+      resourceBank[resource] += parseInt(document.getElementById(resource + "RobberAmount").value)
+      updateResourcesInBank()
+    }
   }
   console.log(player, turn)
   if(player == turn){
@@ -79,19 +86,24 @@ function confirmRobber(){
     document.getElementById("placeRobberInfo").style.display="block"
     // document.getElementById("buttonDiv").style.display="none"
   } else { /* could be put in a function cus its double */
-    document.getElementById("robberConfirmationButton").disabled = true
-    robberDiv = document.getElementById("robberDisplay")
-    robberDiv.style.display = "block"
-    player = robbedPlayers[0][0]
-    document.getElementById("robberPlayer").innerHTML = playerList[player].name
-    document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
-    document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
-    document.getElementById("totalResourcesSelected").innerHTML = 0
-    document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
-    for(let resource in playerList[player].resources){
-      document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
-      document.getElementById(resource + "RobberAmount").value = 0
-      document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
+    if(playerList[robbedPlayers[0][0]].ai){
+      aiList.find(ai => ai.i == robbedPlayers[0][0]).robberLosing(robbedPlayers[0][2]) // does the robbing for a computer
+      confirmRobber()
+    } else {
+      document.getElementById("robberConfirmationButton").disabled = true
+      robberDiv = document.getElementById("robberDisplay")
+      robberDiv.style.display = "block"
+      player = robbedPlayers[0][0]
+      document.getElementById("robberPlayer").innerHTML = playerList[player].name
+      document.getElementById("robberTotal").innerHTML = robbedPlayers[0][1]
+      document.getElementById("robberLoss").innerHTML = robbedPlayers[0][2]
+      document.getElementById("totalResourcesSelected").innerHTML = 0
+      document.getElementById("totalResourcesToSelect").innerHTML = robbedPlayers[0][2]
+      for(let resource in playerList[player].resources){
+        document.getElementById(resource + "RobberAmount").max = playerList[player].resources[resource]
+        document.getElementById(resource + "RobberAmount").value = 0
+        document.getElementById(resource + "TotalRobber").innerHTML = playerList[player].resources[resource]
+      }
     }
   }
 }
