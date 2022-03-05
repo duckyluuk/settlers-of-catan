@@ -1,5 +1,6 @@
 // set all the main game things
-function setupGame(){
+function setupGame(previousAiList=false){
+  if(previousAiList) console.log("WINNER:" + previousAiList[0].i, JSON.stringify(previousAiList[0].weights))
   let playerAmount = amountInput.value
   let colorCheck = [];
   playerList = []
@@ -19,15 +20,28 @@ function setupGame(){
     if(name.length < 1) name = "player " + i 
     if(computerSelection == "computer"){
       playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color,true))
-      aiList.push(new AI(i-1,0,0,0,0))
+      if(!previousAiList){
+        aiList.push(new AI(i-1,0,0,0,0))
+      } else {
+        console.log("AI " + String(i-1), previousAiList[i-1])
+        
+        aiList.push(new AI(i-1,previousAiList.length,i-1,previousAiList[i-1].weights,previousAiList[0].weights))
+      }
     } else {
       // html injection can be prevent but Lukas refuses to have it
       playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color))
     }
   }  
-  document.getElementById('backgroundMusic').play()
-  document.getElementById('backgroundMusic').loop = true
-  document.getElementById('backgroundMusic').volume = 0.2;
+  if(!previousAiList){
+    document.getElementById('backgroundMusic').play()
+    document.getElementById('backgroundMusic').loop = true
+    document.getElementById('backgroundMusic').volume = 0.2;
+  } else {
+    console.log("new game")
+    createPlayerInfo()
+    aiList[0].startTurn()
+    updateSidebar(turn)
+  }
   gameStarted = createTileList(); // ends menu loop and starts game loop
   console.log(gameStarted)
 }

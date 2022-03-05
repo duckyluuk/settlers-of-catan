@@ -60,7 +60,6 @@ function robberActions() {
     document.getElementById("playerCards"+turn).disabled = true;*/
     document.getElementById("placeRobberInfo").style.display="block"
   }
-  console.log(robbedPlayers)
 }
 
 function confirmRobber(){
@@ -70,13 +69,11 @@ function confirmRobber(){
   let player = robbedPlayers[0][0]
   if(!playerList[player].ai){
     for(let resource in playerList[player].resources){
-      console.log(document.getElementById(resource + "RobberAmount").value)
       playerList[player].resources[resource] -= parseInt(document.getElementById(resource + "RobberAmount").value) 
       resourceBank[resource] += parseInt(document.getElementById(resource + "RobberAmount").value)
       updateResourcesInBank()
     }
   }
-  console.log(player, turn)
   if(player == turn){
     updateSidebar(turn)
   }
