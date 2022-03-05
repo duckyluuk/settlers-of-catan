@@ -57,6 +57,9 @@ let newRobberLocation = false;
 let stealResource = false;
 let tradeAcceptingPlayer = false;
 let win = false;
+turnCount = 0
+let lastChangeCounter = 0;
+let lastChangeBuildingsLeft = false;
 let resourceBank = {
   lumber:19,
   wool:19,
@@ -107,9 +110,9 @@ function updateSidebar(turn,playerChange = false) {
     currentPlayer.scrollIntoView({behavior: "smooth", block: "end", inline: "center"});
     if(playerList[turn].ai && setupPhase){
       setTimeout(function() {
-      console.log(aiList.find(ai => ai.i == turn))
+      //console.log(aiList.find(ai => ai.i == turn))
       aiList.find(ai => ai.i == turn).startTurn()
-      }, 1)
+      }, 10)
       // console.log()
       // playerList[turn].ai.startTurn()
     }
@@ -212,9 +215,11 @@ function playerSteals(victim,totalResources){
 function winCheck(){
   if(playerList[turn].points >= 10){
     console.log("winner winner chicken dinner")
-    document.getElementById("winnerPlayer").innerHTML = playerList[turn].name
-    document.getElementById("winnerPlayer").style.color = playerList[turn].color
-    document.getElementById("winnerDisplay").style.display = "block"
+    if(aiList.length != playerList.length){
+      document.getElementById("winnerPlayer").innerHTML = playerList[turn].name
+      document.getElementById("winnerPlayer").style.color = playerList[turn].color
+      document.getElementById("winnerDisplay").style.display = "block"
+    }
     win = true
     disableButtons(true)
     // document.getElementById("shopButton").disabled = false;  
@@ -223,7 +228,7 @@ function winCheck(){
     // document.getElementById("tradeWithPlayers").disabled = false;
     // document.getElementById("playerCards"+turn).disabled = false;
   } else {
-    console.log("no winner")
+    //console.log("no winner")
   }
 }
 
@@ -253,21 +258,38 @@ function endTurn() {
   document.getElementById("endTurnButton").disabled = true;
   document.getElementById("bankTrade").disabled = true;
   document.getElementById("tradeWithPlayers").disabled = true; */
+  turnCount++
+  if(!win && aiList.length == playerList.length && turnCount > 1000) {
+    aiList.sort((a,b) => playerList[b.i].points- playerList[a.i].points)
+    let aiListCopy = [...aiList]
+    resetGame(false)
+    setupGame(aiListCopy)
+  }
+  
   document.getElementById("informationDisplay").style.display = "none"
   if(playerList[turn].ai && !win){
     setTimeout(function() {
     //console.log(aiList.find(ai => ai.i == turn))
     aiList.find(ai => ai.i == turn).startTurn()
-    }, 1)
+    }, 10)
     // console.log()
     // playerList[turn].ai.startTurn()
+  } else  if(win){
+    if(playerList.length == aiList.length){
+      aiList.sort((a,b) => playerList[b.i].points- playerList[a.i].points)
+      let aiListCopy = [...aiList]
+      
+      resetGame(false)
+      console.log(aiListCopy)
+      setupGame(aiListCopy)
+    }
   }
 }
 
 function soundEffect(sound){
-    var audio = new Audio(sound);
-    audio.volume = .6;
-    audio.play();
+  var audio = new Audio(sound);
+  audio.volume = .6;
+  audio.play();
 }
 
 function updateResourcesInBank(){
@@ -291,7 +313,7 @@ function distToSegment (p, v, w) {
 }
 
 // reset the game
-function resetGame() {
+function resetGame(showMenu=true) {
   gameStarted = false;
   
   /* reset important game variables */
@@ -328,6 +350,9 @@ function resetGame() {
   newRobberLocation = false;
   stealResource = false;
   win = false;
+  turnCount = 0
+  lastChangeCounter = 0;
+  lastChangeBuildingsLeft = false;
   resourceBank = {
     lumber:19,
     wool:19,
@@ -336,8 +361,10 @@ function resetGame() {
     grain:19
   }
   
-  document.getElementById("menu").style.display = "block"
-  document.getElementById("sidebar").style.display = "none"
-  document.getElementById("winnerDisplay").style.display = "none"  
-  requestAnimationFrame(menu)
+  if(showMenu){
+    document.getElementById("menu").style.display = "block"
+    document.getElementById("sidebar").style.display = "none"
+    document.getElementById("winnerDisplay").style.display = "none"  
+    requestAnimationFrame(menu)
+  }
 }

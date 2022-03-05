@@ -73,6 +73,7 @@ function click(e) {
                 builtSettlement = j
                 soundEffect("https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/434130__89o__place.wav?v=1643479854443")
               }       
+              updateLongestRoad()
               winCheck();
             }
             
@@ -251,41 +252,52 @@ function click(e) {
 }
   
 // update the longest road length for each player
-function updateLongestRoad() {
+function updateLongestRoad(gc = false) {
+  let pl = (gc ? gc.playerList : playerList)
+  let rl = (gc ? gc.roadList : roadList)
+  let jl = (gc ? gc.junctionList : junctionList)
+  
   // loop through all roads owned by a player
-  for(let road of roadList) {
+  for(let road of rl) {
     if(road.player !== false) {
       // find the length for that road
       let player = road.player
-      let roadLen = checkLongestRoad(player, road)
+      let roadLen = checkLongestRoad(gc, player, road)
       
       // update the longest road for the player
-      if(roadLen > playerList[player].longestRoad) playerList[player].longestRoad = roadLen
+      pl[player].longestRoad = roadLen
       // update the person who holds the longest road if the road is longer
-      if(longestRoadPlayer === false && playerList[player].longestRoad >=5) {
+      if((gc ? gc.longestRoadPlayer : longestRoadPlayer) === false && pl[player].longestRoad >=5) {
         // if no one has the largest road yet and the player's road length is 5 or more, they are now the longest road holder
-        longestRoadPlayer = player
-        playerList[player].longestRoadHolder = true;
-        playerList[player].points+=2
-      } else if(longestRoadPlayer !== false) {
+        if(gc) gc.longestRoadPlayer = player
+        else longestRoadPlayer = player
+        pl[player].longestRoadHolder = true;
+        pl[player].points+=2
+      } else if((gc ? gc.longestRoadPlayer : longestRoadPlayer) !== false) {
         // if someone already has the longest road, check if the player's road length is bigger than that of the current longest road
-        let longestRoadHolder = playerList[longestRoadPlayer]
-        if(playerList[player].longestRoad > longestRoadHolder.longestRoad) {
-          longestRoadPlayer = player
+        let longestRoadHolder = pl[(gc ? gc.longestRoadPlayer : longestRoadPlayer)]
+        if(pl[player].longestRoad > longestRoadHolder.longestRoad) {
+          if(gc) gc.longestRoadPlayer = player
+          else longestRoadPlayer = player
           longestRoadHolder.points-=2
-          playerList[player].points+=2
+          pl[player].points+=2
           longestRoadHolder.longestRoadHolder = false;
-          playerList[player].longestRoadHolder = true
+          pl[player].longestRoadHolder = true
         }
       }
     }
   }
-  updateSidebar()
+  if(!gc) updateSidebar(turn)
 }
 
 // find the longst road a player has
-function checkLongestRoad(p, r, l=0, checked=[], j=false) {
-  let adjacentJunctions = [junctionList.find(j => j.x == r.x1 && j.y == r.y1), junctionList.find(j => j.x == r.x2 && j.y == r.y2)]
+function checkLongestRoad(gc, p, r, l=0, checked=[], j=false) {
+  let pl = (gc ? gc.playerList : playerList)
+  let rl = (gc ? gc.roadList : roadList)
+  let jl = (gc ? gc.junctionList : junctionList)
+  
+  let adjacentJunctions = [jl.find(j => j.x == r.x1 && j.y == r.y1), jl.find(j => j.x == r.x2 && j.y == r.y2)]
+  adjacentJunctions = adjacentJunctions.filter(j => j.player === false || j.player === p)
   if(j) {
     adjacentJunctions = adjacentJunctions.filter(junc => j!=junc)
     if(j.player !== p && j.player !== false) return l;
@@ -297,7 +309,7 @@ function checkLongestRoad(p, r, l=0, checked=[], j=false) {
   //find the other roads attached to this road
   for(let j of adjacentJunctions) {
     if(j.player === turn) canBuild = true;
-    adjacentRoads = [...adjacentRoads, ...roadList.filter(r => (r.x1 == j.x && r.y1 == j.y) || (r.x2 == j.x && r.y2 == j.y)).filter(road => road!=r)]
+    adjacentRoads = [...adjacentRoads, ...rl.filter(r => (r.x1 == j.x && r.y1 == j.y) || (r.x2 == j.x && r.y2 == j.y)).filter(road => road!=r)]
   }
   let best = l
   // loop through all roads next to the junction(s)
@@ -309,7 +321,7 @@ function checkLongestRoad(p, r, l=0, checked=[], j=false) {
       // make a copy of the array of checked roads for each possible path from here
       let checkedCopy = [...checked, r.x1+"_"+r.y1+"_"+r.x2+"_"+r.y2]
       // check if the new path is better than the old path
-      best = Math.max(checkLongestRoad(p, road, l+1, checkedCopy, nj), best)
+      best = Math.max(checkLongestRoad(gc, p, road, l+1, checkedCopy, nj), best)
     }
     
   }

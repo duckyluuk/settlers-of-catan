@@ -62,18 +62,39 @@ class AI {
     this.findBankTrades()
     this.findTurnActions()
     winCheck()
-      if(!setupPhase){ 
-        endTurn()
-      } else {
-        updateSidebar(turn, true)
+    /*if(playerList.length == aiList.length){
+      let currentBuildingsLeft = []
+      for(let player of playerList){
+        currentBuildingsLeft.push([player.roadLeft,player.settlementLeft,player.cityLeft])
       }
+      console.log(lastChangeBuildingsLeft,currentBuildingsLeft)
+      if(lastChangeBuildingsLeft == currentBuildingsLeft){
+        lastChangeCounter++
+        if(lastChangeCounter == 250){ // if game keeps looping because noone does anything
+          win = true
+          console.log("new game because of loop")
+        }
+      } else {
+        lastChangeCounter = 0
+        lastChangeBuildingsLeft = [...currentBuildingsLeft]
+      }
+    } */
+    if(!setupPhase){ 
+      endTurn()
+    } else {
+      updateSidebar(turn, true)
+    }
   }
   // find an action to do
   findTurnActions() {
     let gc = this.gameCopy
     let allActions = this.findActionWeight(gc)
+    // console.log(allActions.length)
+    // console.log(gc)
     // not sure how exactly to do this, just try every possible set of actions and see which is best?
     allActions.sort((a,b) => b.weight - a.weight)
+    // force building road + settlement in setup phase
+    if(setupPhase) allActions = allActions.filter(a => a.actions.length == 2)
     if(allActions.length){
       tileList = allActions[0].gameCopy.tileList
       roadList = allActions[0].gameCopy.roadList
@@ -107,16 +128,28 @@ class AI {
   findActionWeight(gc, allActions = [], actionList = [], j=false, tradeCount=0) { // recursively loop through possible actions
     //console.log(gc)
     let newCopy = this.copyGame(false, gc)
+    let startTime = Date.now()
     //console.log(newCopy)
     let actions = this.findActionList(newCopy)
     for(let buy in actions.buy){
       for(let i in actions.buy[buy]){
+        if(Date.now()-startTime > 1000) {
+          startTime = Date.now()
+          break
+        }
         if(actions.buy[buy][i]) {
           let builtJunction = false // in setupPhase, the built junction should be passed into this variable to find roads next to it.          
           if(newCopy.setupPhase && buy == 'settlement') builtJunction = actions.buy[buy][i]
           this.buy(buy, actions.buy[buy][i], newCopy)
           let w = this.calculateWeight(false, newCopy)
-          let actionListCopy = [...actionList, {type: buy, building: actions.buy[buy][i]}]
+          let buystr = buy+"_"
+          if(buy == "road") {
+            buystr += actions.buy[buy][i].x1+"_"+actions.buy[buy][i].y1+"_"+actions.buy[buy][i].x2+"_"+actions.buy[buy][i].y2
+          } else if(buy == "settlement" || buy == "city") {
+            buystr += actions.buy[buy][i].x+"_"+actions.buy[buy][i].y
+          }
+          let actionListCopy = [...actionList, {type: buy, building: actions.buy[buy][i], str: buystr}]
+          //console.log(actionListCopy[actionListCopy.length-1].building)
           allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
           //console.log(newCopy, actionListCopy)
           if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy, builtJunction,tradeCount) ]
@@ -133,6 +166,10 @@ class AI {
     if(tradeCount < 3) {
     for(let trades in actions.trade){
       for(let t in actions.trade[trades]){
+        if(Date.now()-startTime > 1000) {
+          startTime = Date.now()
+          break
+        }
           if(trades == "bank"){
             //console.log(trades, actions.trade[trades][t][trade],actions.trade[trades][t][trade].give)
             newCopy.playerList[this.i].resources[actions.trade[trades][t].give] -= actions.trade[trades][t].giveAmount
@@ -147,7 +184,7 @@ class AI {
             //console.log(actionList)
             let actionListCopy = [...actionList, {type: trades, trade: actions.trade[trades][t]}]
             allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
-            //console.log(newCopy, actionListCopy)
+            //console.log(actionListCopy)
             if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy,false,tradeCount+1) ]
             // console.log(buy,i,actions)
             let action = actions.trade[trades] 
@@ -157,7 +194,7 @@ class AI {
         }
       }
     }
-    //console.log(allActions)
+    // console.log(JSON.stringify(allActions))
     return allActions
   }
   
@@ -182,6 +219,7 @@ class AI {
         if(gc.setupPhase == "road"){
           gc.setupPhase = false
         }
+        updateLongestRoad(gc)
         break;
         
       case "settlement" :
@@ -201,7 +239,6 @@ class AI {
             gc.playerList[this.i].trades[building.tradeResources[0]] = 2
           }
         }
-        console.log(gc.playerList[this.i].trades)
         if(gc.setupPhase == "settlement"){
           gc.setupPhase = "road"
           if(gc.playerList[this.i].settlementLeft == 3){
@@ -213,6 +250,7 @@ class AI {
             }
           }
         }
+        updateLongestRoad(gc)
         break;
         
       case "city" :
@@ -535,11 +573,6 @@ class AI {
     weight += p.longestRoad*this.weights.longerRoad/(p.longestRoadHolder ? 2 : 1)
     weight += p.armySize*this.weights.largerArmy/(p.largestArmyHolder ? 2 : 1)
     
-    // weight for roads, here now to make sure it places a road at the start
-    if(setupPhase){
-      weight += pl[this.i].roads.length *100
-    }
-    
     // maximize amount of possible build junctions to build roads sensibly
     let buildJunctions = this.findBuildSettlements(gc)
     weight += (buildJunctions.length+p.buildings.length)*(this.weights.junctionPlaces)/5
@@ -571,7 +604,6 @@ class AI {
 function generateWeights() {
   return {
     win: 100,
-    fun: -100,
     points: Math.random(),
     diceProbability: Math.random(),
     developmentCard: Math.random(),
@@ -591,6 +623,15 @@ function generateWeights() {
       brick: Math.random(),
       grain: Math.random(),
       general: Math.random()
-    }
+      
+    }    
+    /*resourceWeights: {
+      lumber: 0.5,
+      wool: 0.5,
+      ore: 0.5,
+      brick: 0.5,
+      grain: 0.5,
+      general: 0.5
+    }*/
   }
 }
