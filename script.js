@@ -1,3 +1,5 @@
+
+
 var canvas = document.getElementById("game")
 canvas.width  = window.innerWidth*2/3; // the width of the canvas
 canvas.height = window.innerHeight; // the height of the canvas
@@ -57,7 +59,7 @@ let newRobberLocation = false;
 let stealResource = false;
 let tradeAcceptingPlayer = false;
 let win = false;
-turnCount = 0
+let turnCount = 0
 let lastChangeCounter = 0;
 let lastChangeBuildingsLeft = false;
 let resourceBank = {
@@ -111,8 +113,8 @@ function updateSidebar(turn,playerChange = false) {
     if(playerList[turn].ai && setupPhase){
       setTimeout(function() {
       //console.log(aiList.find(ai => ai.i == turn))
-      aiList.find(ai => ai.i == turn).startTurn()
-      }, 10)
+        aiList.find(ai => ai.i == turn).startTurn()
+      }, 4)
       // console.log()
       // playerList[turn].ai.startTurn()
     }
@@ -156,19 +158,30 @@ function rollDie(){
       grain:0
     }
     // loop through all players and their building checking if there is enough in the bank   
-    for(let player of playerList) {
+    /*for(let player of playerList) {
       for(let building of player.buildings) {
         for(let resource of building.resources) {
           // if the number for the resource is rolled, give the player the resource.
           if(dieResult == resource.num && !building.robber) {
             resourcePayout[resource.type] += 1 + +(building.building == "city")
+            
           }
         }
       }
+    }*/
+    let robberDone = false
+    for(let building of junctionList) {
+      if(building.player === false) continue;
+      for(let resource of building.resources) {
+        if(dieResult == resource.num && (building.robber != resource || robberDone)) {
+          resourcePayout[resource.type] += 1 + +(building.building == "city")
+        } else if(building.robber) robberDone = true
+      }
+      robberDone = false
     }
     //console.log(resourcePayout)
     // loop through all players and their building paying out the resource
-    for(let player of playerList) {
+    /*for(let player of playerList) {
       for(let building of player.buildings) {
         for(let resource of building.resources) {
           // if the number for the resource is rolled, give the player the resource.
@@ -184,41 +197,39 @@ function rollDie(){
           }
         }
       }
-    }
-  }
-  updateSidebar(turn)
-}
-
-function playerSteals(victim,totalResources){
-  if(totalResources!=0){
-    let stolenResource = Math.ceil(Math.random()*totalResources)
-    for(let r in playerList[victim].resources){
-      stolenResource -= playerList[victim].resources[r]
-      if(stolenResource <=0){
-        playerList[victim].resources[r] -=1
-        playerList[turn].resources[r] += 1
-        break;
+    }*/
+    
+    for(let building of junctionList) {
+      if(building.player === false) continue;
+      for(let resource of building.resources) {
+        if(dieResult == resource.num && (building.robber != resource || robberDone)) {
+          if(resourcePayout[resource.type]<=resourceBank[resource.type]){
+            playerList[building.player].resources[resource.type] += 1 + +(building.building == "city") // give 2 of the resource if the building is a city
+            resourceBank[resource.type] -= 1 - -(building.building == "city") 
+            resourcePayout[resource.type] -= 1 - -(building.building == "city")
+            
+          } else {
+            console.log("not enough resources")
+          }
+        } else if(building.robber) robberDone = true
       }
+      robberDone = false
     }
+    updateResourcesInBank()
   }
-  disableButtons(false)
-  /*
-  document.getElementById("shopButton").disabled = false;  
-  document.getElementById("endTurnButton").disabled = false;
-  document.getElementById("bankTrade").disabled = false;
-  document.getElementById("tradeWithPlayers").disabled = false;
-  document.getElementById("playerCards"+turn).disabled = false; */
-  document.getElementById("informationDisplay").style.display = "none"  
   updateSidebar(turn)
 }
 
 function winCheck(){
+  if(win) return
   if(playerList[turn].points >= 10){
     console.log("winner winner chicken dinner")
     if(aiList.length != playerList.length){
       document.getElementById("winnerPlayer").innerHTML = playerList[turn].name
       document.getElementById("winnerPlayer").style.color = playerList[turn].color
       document.getElementById("winnerDisplay").style.display = "block"
+    } else {
+      aiList[turn].gameWins += 1
     }
     win = true
     disableButtons(true)
@@ -247,6 +258,7 @@ function disableButtons(disable, exception = false){
 }
 
 function endTurn() {
+  if(robbedPlayers.length) return
   updateLongestRoad()
   // increment turn and update sidebar stuff
   turn = (turn+1)%playerList.length
@@ -260,7 +272,19 @@ function endTurn() {
   document.getElementById("tradeWithPlayers").disabled = true; */
   turnCount++
   if(!win && aiList.length == playerList.length && turnCount > 1000) {
-    aiList.sort((a,b) => playerList[b.i].points- playerList[a.i].points)
+    for(let ai in aiList){
+      aiList[ai].gameWins += 1
+    }
+    let gameWinCheck
+    for(let i = 0; i<aiList.length; i++){
+      if(aiList[i].gameWins>=3){
+        gameWinCheck = true
+      }
+    }
+    if(gameWinCheck){
+      console.log(gameWinCheck)
+      aiList.sort((a,b) => aiList[b.i].gameWins- aiList[a.i].gameWins)
+    }
     let aiListCopy = [...aiList]
     resetGame(false)
     setupGame(aiListCopy)
@@ -270,13 +294,22 @@ function endTurn() {
   if(playerList[turn].ai && !win){
     setTimeout(function() {
     //console.log(aiList.find(ai => ai.i == turn))
-    aiList.find(ai => ai.i == turn).startTurn()
-    }, 10)
+      aiList.find(ai => ai.i == turn).startTurn()
+    }, 4)
     // console.log()
     // playerList[turn].ai.startTurn()
-  } else  if(win){
+  } else if(win){
     if(playerList.length == aiList.length){
-      aiList.sort((a,b) => playerList[b.i].points- playerList[a.i].points)
+      let gameWinCheck = false
+      for(let i = 0; i<aiList.length; i++){
+        if(aiList[i].gameWins>=3){
+          gameWinCheck = true
+        }
+      }
+      console.log(gameWinCheck)
+      if(gameWinCheck){
+        aiList.sort((a,b) => aiList[b.i].gameWins-aiList[a.i].gameWins)
+      }
       let aiListCopy = [...aiList]
       
       resetGame(false)
@@ -287,9 +320,11 @@ function endTurn() {
 }
 
 function soundEffect(sound){
-  var audio = new Audio(sound);
-  audio.volume = .6;
-  audio.play();
+  if(playerList.length != aiList.length){
+    var audio = new Audio(sound);
+    audio.volume = .6;
+    audio.play();
+  }
 }
 
 function updateResourcesInBank(){

@@ -123,9 +123,17 @@ class Tile{
       if(inside){
         for(let t in tileList){
           if(tileList[t].robber){
-            tileList[t].robber=false;
+            tileList[t].robber = false;
+            for(let j of junctionList) {
+              let dis = Math.sqrt((tileList[t].x-j.x)**2+(tileList[t].y-j.y)**2)
+              if(dis < 1.01) j.robber = false
+            }
             break;
           }
+        }
+        for(let j of junctionList) {
+          let dis = Math.sqrt((this.x-j.x)**2+(this.y-j.y)**2)
+          if(dis < 1.01) j.robber = this.resource
         }
         return this.robber = true
       }
@@ -191,12 +199,13 @@ class Road {
 
 
 class Junction {
-  constructor(x,y,floorType,resource,tradeResource,player=false,building=false,resources=[],tradeResources=[]) {
+  constructor(x,y,floorType,resource,tradeResource,player=false,building=false,resources=[],tradeResources=[],robber=false) {
     // positions of the junction
     this.x = x
     this.y = y
     this.player = player
     this.building = building
+    this.robber = robber
     
     this.floorType = [...floorType] //land/water
     

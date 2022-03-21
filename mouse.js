@@ -80,7 +80,9 @@ function click(e) {
           }
         } else if(j.player === turn && j.building == "settlement") {
           if(choosingBuilding == "city") {
+            console.log(j)
             j.building = "city";
+            console.log(j)
             playerList[turn].settlementLeft++;
             playerList[turn].cityLeft--;
             playerList[turn].points++
@@ -256,37 +258,40 @@ function updateLongestRoad(gc = false) {
   let pl = (gc ? gc.playerList : playerList)
   let rl = (gc ? gc.roadList : roadList)
   let jl = (gc ? gc.junctionList : junctionList)
-  
+  let roadLengths = Array(playerList.length).fill(0)
   // loop through all roads owned by a player
   for(let road of rl) {
     if(road.player !== false) {
       // find the length for that road
       let player = road.player
-      let roadLen = checkLongestRoad(gc, player, road)
-      
+      let newRoadLen = checkLongestRoad(gc, player, road)
+      if(newRoadLen > roadLengths[road.player]) roadLengths[road.player] = newRoadLen
       // update the longest road for the player
-      pl[player].longestRoad = roadLen
-      // update the person who holds the longest road if the road is longer
-      if((gc ? gc.longestRoadPlayer : longestRoadPlayer) === false && pl[player].longestRoad >=5) {
-        // if no one has the largest road yet and the player's road length is 5 or more, they are now the longest road holder
+    }
+  }
+  for(let player in pl) {
+    pl[player].longestRoad = roadLengths[player]
+    // update the person who holds the longest road if the road is longer
+    if((gc ? gc.longestRoadPlayer : longestRoadPlayer) === false && pl[player].longestRoad >=5) {
+      // if no one has the largest road yet and the player's road length is 5 or more, they are now the longest road holder
+      if(gc) gc.longestRoadPlayer = player
+      else longestRoadPlayer = player
+      pl[player].longestRoadHolder = true;
+      pl[player].points+=2
+    } else if((gc ? gc.longestRoadPlayer : longestRoadPlayer) !== false) {
+      // if someone already has the longest road, check if the player's road length is bigger than that of the current longest road
+      let longestRoadHolder = pl[(gc ? gc.longestRoadPlayer : longestRoadPlayer)]
+      if(pl[player].longestRoad > longestRoadHolder.longestRoad) {
         if(gc) gc.longestRoadPlayer = player
         else longestRoadPlayer = player
-        pl[player].longestRoadHolder = true;
+        longestRoadHolder.points-=2
         pl[player].points+=2
-      } else if((gc ? gc.longestRoadPlayer : longestRoadPlayer) !== false) {
-        // if someone already has the longest road, check if the player's road length is bigger than that of the current longest road
-        let longestRoadHolder = pl[(gc ? gc.longestRoadPlayer : longestRoadPlayer)]
-        if(pl[player].longestRoad > longestRoadHolder.longestRoad) {
-          if(gc) gc.longestRoadPlayer = player
-          else longestRoadPlayer = player
-          longestRoadHolder.points-=2
-          pl[player].points+=2
-          longestRoadHolder.longestRoadHolder = false;
-          pl[player].longestRoadHolder = true
-        }
+        longestRoadHolder.longestRoadHolder = false;
+        pl[player].longestRoadHolder = true
       }
     }
   }
+  winCheck()
   if(!gc) updateSidebar(turn)
 }
 
