@@ -1,4 +1,3 @@
-
 /*
  * lc: amount of players in the last game
  * lp: position in the last game (lower is better)
@@ -8,6 +7,7 @@
 class AI {
   constructor(i, lc, lp, lw, ww) {
     this.i = i // index of the player the AI is for in the playerList
+    this.gameWins = 0
     if(lc == 0) this.weights = generateWeights()
     else {
       if(lp == 0) {
@@ -21,10 +21,11 @@ class AI {
         this.weights = {
           win: 100,
           // for each weight, move it closer to the weights of the winner by 1/5th of the difference
+          haveCards: lw.points + (ww.points - lw.points)/5,
           points: lw.points + (ww.points - lw.points)/5,
           diceProbability: lw.diceProbability + (ww.diceProbability - lw.diceProbability)/5,
           developmentCard: lw.developmentCard + (ww.developmentCard - lw.developmentCard)/5,
-          recources: lw.resources + (ww.resources - lw.resources)/5,
+          resources: lw.resources + (ww.resources - lw.resources)/5,
           longerRoad: lw.longerRoad + (ww.longerRoad - lw.longerRoad)/5,
           largerArmy: lw.largerArmy + (ww.largerArmy - lw.largerArmy)/5,
           sameCards: lw.sameCards + (ww.sameCards - lw.sameCards)/5,
@@ -38,6 +39,12 @@ class AI {
             ore: lw.resourceWeights.ore + (ww.resourceWeights.ore - lw.resourceWeights.ore)/5,
             brick: lw.resourceWeights.brick + (ww.resourceWeights.brick - lw.resourceWeights.brick)/5,
             grain: lw.resourceWeights.grain + (ww.resourceWeights.grain - lw.resourceWeights.grain)/5
+          },
+          affordBuyWeights: {
+            road: lw.affordBuyWeights.road + (ww.affordBuyWeights.road - lw.affordBuyWeights.road)/5,
+            settlement: lw.affordBuyWeights.settlement + (ww.affordBuyWeights.settlement - lw.affordBuyWeights.settlement)/5,
+            city: lw.affordBuyWeights.city + (ww.affordBuyWeights.city - lw.affordBuyWeights.city)/5,
+            developmentCard: lw.affordBuyWeights.develomentCards + (ww.affordBuyWeights.developmentCards - lw.affordBuyWeights.developmentCards)/5
           }
         }
       }  
@@ -95,11 +102,20 @@ class AI {
     allActions.sort((a,b) => b.weight - a.weight)
     // force building road + settlement in setup phase
     if(setupPhase) allActions = allActions.filter(a => a.actions.length == 2)
+    allActions = allActions.filter(a => {
+      if(a.actions.map(a => a.str).includes("playCard_Victory Point")) {
+        if(a.gameCopy.playerList[this.i].points >= 10) return true
+        else return false
+      } else return true
+    })
     if(allActions.length){
+      console.log(allActions[0])      
+      //console.log(allActions[0].actions.length)
       tileList = allActions[0].gameCopy.tileList
       roadList = allActions[0].gameCopy.roadList
       junctionList = allActions[0].gameCopy.junctionList
       playerList = allActions[0].gameCopy.playerList
+      cardStack = allActions[0].gameCopy.cardStack
       longestRoadPlayer = allActions[0].gameCopy.longestRoadPlayer
       largestArmyPlayer = allActions[0].gameCopy.largestArmyPlayer
       if(setupPhase){
@@ -125,51 +141,86 @@ class AI {
     }
   }
   
-  findActionWeight(gc, allActions = [], actionList = [], j=false, tradeCount=0) { // recursively loop through possible actions
+  findActionWeight(gc, allActions = [], actionList = [], j=false, tradeCount=0, cardCount = 0, cardsBought = 0) { // recursively loop through possible actions
     //console.log(gc)
+    // hope this prevents memory errors by preventing it to go on too long
+    if(allActions.length > 100000) return allActions
+    let actionStrings = allActions.map(a => a.actions.map(a => a.str).sort())
     let newCopy = this.copyGame(false, gc)
-    let startTime = Date.now()
     //console.log(newCopy)
     let actions = this.findActionList(newCopy)
+    // console.log(actions)
     for(let buy in actions.buy){
-      for(let i in actions.buy[buy]){
-        if(Date.now()-startTime > 1000) {
-          startTime = Date.now()
-          break
-        }
-        if(actions.buy[buy][i]) {
-          let builtJunction = false // in setupPhase, the built junction should be passed into this variable to find roads next to it.          
-          if(newCopy.setupPhase && buy == 'settlement') builtJunction = actions.buy[buy][i]
-          this.buy(buy, actions.buy[buy][i], newCopy)
+      // console.log(buy)
+      if(buy == "developmentCard" && !setupPhase){
+        if(actions.buy[buy]){
+          this.buy(buy, false, newCopy)
+          cardsBought += 1
           let w = this.calculateWeight(false, newCopy)
-          let buystr = buy+"_"
-          if(buy == "road") {
-            buystr += actions.buy[buy][i].x1+"_"+actions.buy[buy][i].y1+"_"+actions.buy[buy][i].x2+"_"+actions.buy[buy][i].y2
-          } else if(buy == "settlement" || buy == "city") {
-            buystr += actions.buy[buy][i].x+"_"+actions.buy[buy][i].y
-          }
-          let actionListCopy = [...actionList, {type: buy, building: actions.buy[buy][i], str: buystr}]
-          //console.log(actionListCopy[actionListCopy.length-1].building)
-          allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
-          //console.log(newCopy, actionListCopy)
-          if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy, builtJunction,tradeCount) ]
-          // console.log(buy,i,actions)
-          let action = actions.buy[buy][i]
-          newCopy = this.copyGame(false, gc)
+          let buystr = "card"
+          let actionListCopy = [...actionList, {type: buy, str: buystr}]
+          let copyStrings = actionListCopy.map(a => a.str).sort()
+            if(actionStrings.filter(strings => {
+              if(strings.length != copyStrings.length) return false;
+              for(let i in strings) {
+                if(strings[i] != copyStrings[i]) return false;
+              }
+              return true;
+            }).length <=0) {
+              //console.log(actionListCopy[actionListCopy.length-1].building)
+              allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
+              //console.log(newCopy, actionListCopy)
+              if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy, false,tradeCount,cardsBought) ]
+            }
+            // console.log(buy,i,actions)
+            let action = actions.buy[buy]
+            newCopy = this.copyGame(false, gc)
 
-          actions = this.findActionList(newCopy, j)
+            actions = this.findActionList(newCopy, j)
         }
+      } else {
         
+        for(let i in actions.buy[buy]){
+          // console.log(actions.buy[buy][i], buy)
+          if(actions.buy[buy][i]) {
+            let builtJunction = false // in setupPhase, the built junction should be passed into this variable to find roads next to it.
+            if(newCopy.setupPhase && buy == 'settlement') builtJunction = actions.buy[buy][i]
+            this.buy(buy, actions.buy[buy][i], newCopy)
+            let w = this.calculateWeight(false, newCopy)
+            let buystr = buy+"_"
+            if(buy == "road") {
+              buystr += actions.buy[buy][i].x1+"_"+actions.buy[buy][i].y1+"_"+actions.buy[buy][i].x2+"_"+actions.buy[buy][i].y2
+            } else if(buy == "settlement" || buy == "city") {
+              buystr += actions.buy[buy][i].x+"_"+actions.buy[buy][i].y
+            }
+            let actionListCopy = [...actionList, {type: buy, building: actions.buy[buy][i], str: buystr}]
+            let copyStrings = actionListCopy.map(a => a.str).sort()
+            if(actionStrings.filter(strings => {
+              if(strings.length != copyStrings.length) return false;
+              for(let i in strings) {
+                if(strings[i] != copyStrings[i]) return false;
+              }
+              return true;
+            }).length <=0) {
+              //console.log(actionListCopy[actionListCopy.length-1].building)
+              allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
+              //console.log(newCopy, actionListCopy)
+              if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy, builtJunction,tradeCount,cardCount,cardsBought) ]
+            }
+            // console.log(buy,i,actions)
+            let action = actions.buy[buy][i]
+            newCopy = this.copyGame(false, gc)
+
+            actions = this.findActionList(newCopy, j)
+          }
+
+        }
       }
     }
     // console.log(tradeCount)
-    if(tradeCount < 3) {
-    for(let trades in actions.trade){
-      for(let t in actions.trade[trades]){
-        if(Date.now()-startTime > 1000) {
-          startTime = Date.now()
-          break
-        }
+    if(tradeCount<3) {
+      for(let trades in actions.trade){
+        for(let t in actions.trade[trades]){
           if(trades == "bank"){
             //console.log(trades, actions.trade[trades][t][trade],actions.trade[trades][t][trade].give)
             newCopy.playerList[this.i].resources[actions.trade[trades][t].give] -= actions.trade[trades][t].giveAmount
@@ -182,10 +233,21 @@ class AI {
             //console.log(JSON.stringify(newCopy.playerList[this.i].resources),JSON.stringify(newCopy.resourceBank))
             let w = this.calculateWeight(false, newCopy)
             //console.log(actionList)
-            let actionListCopy = [...actionList, {type: trades, trade: actions.trade[trades][t]}]
-            allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
-            //console.log(actionListCopy)
-            if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy,false,tradeCount+1) ]
+            let tradestr = trades + "_"
+            tradestr += actions.trade[trades][t].give+"_"+actions.trade[trades][t].giveAmount+"_"+actions.trade[trades][t].get
+            let actionListCopy = [...actionList, {type: trades, trade: actions.trade[trades][t], str: tradestr}]
+            let copyStrings = actionListCopy.map(a => a.str).sort()
+            if(actionStrings.filter(strings => {
+              if(strings.length != copyStrings.length) return false;
+              for(let i in strings) {
+                if(strings[i] != copyStrings[i]) return false;
+              }
+              return true;
+            }).length <=0) {
+              allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
+              //console.log(actionListCopy)
+              if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy,false,tradeCount+1,cardCount,cardsBought) ]
+            }
             // console.log(buy,i,actions)
             let action = actions.trade[trades] 
           }
@@ -194,7 +256,31 @@ class AI {
         }
       }
     }
-    // console.log(JSON.stringify(allActions))
+    for(let card in actions.playCard){   
+      if(cardCount<1||actions.playCard[card].name == "Victory Point"){
+        if(card < actions.playCard.length-cardsBought||actions.playCard[card].name == "Victory Point"){
+          let playstr = "playCard_" + actions.playCard[card].name
+          newCopy = this.playCard(card,newCopy)
+          let w = this.calculateWeight(false, newCopy)
+          let actionListCopy = [...actionList, {type: "playCard", card: actions.playCard[card].name, str: playstr}]
+          let copyStrings = actionListCopy.map(a => a.str).sort()
+          if(actionStrings.filter(strings => {
+            if(strings.length != copyStrings.length) return false;
+            for(let i in strings) {
+              if(strings[i] != copyStrings[i]) return false;
+            }
+            return true;
+          }).length <=0){
+            allActions.push({weight: w, actions: actionListCopy, gameCopy : newCopy})
+            if(card >= actions.playCard.length-cardsBought) cardsBought-- //if a victory card has just been bought and can be played immediately
+            if(!setupPhase || actionListCopy.length < 2) allActions = [...this.findActionWeight(newCopy, [...allActions,{weight: w, actions: actionListCopy, gameCopy : newCopy}], actionListCopy,false,tradeCount,cardCount+1,cardsBought) ]
+          }
+          let action = actions.playCard[card] 
+          newCopy = this.copyGame(false, gc)
+          actions = this.findActionList(newCopy, j)
+        }
+      }
+    }
     return allActions
   }
   
@@ -277,7 +363,7 @@ class AI {
         road: this.findBuildRoads(gc, builtJunction),
         settlement: this.findBuildSettlements(gc),
         city: this.findBuildCities(gc),
-        //developmentCard: true
+        developmentCard: true
       },
       trade: { // trades the ai can do
         player: [],
@@ -303,7 +389,196 @@ class AI {
     }
     return actions
   }
+  
+  playCard(index,gc = this.gameCopy){
+    let player = gc.playerList[this.i]
+    let success = true
+    switch(player.developmentCards[index].name){
+        case "Knight Card":
+          player.armySize++
+          this.moveRobber(false,gc) // moves robber without changing the main game
+          if(gc.largestArmyPlayer === false && player.armySize >=3) {
+            // if no one has the largest army yet and the player's army size is 3 or more, they are now the largest army holder
+            gc.largestArmyPlayer = this.i
+            player.largestArmyHolder = true;
+            player.points+=2
+          } else if(gc.largestArmyPlayer !== false) {
+            // if someone already is the largest army holder, check if the player's army size is bigger than that of the current largest army holder
+            let largestArmyHolder = gc.playerList[gc.largestArmyPlayer]
+            if(player.armySize > largestArmyHolder.armySize) {
+              largestArmyHolder.points-=2
+              player.points+=2
+              largestArmyHolder.largestArmyHolder = false;
+              player.largestArmyHolder = true
+              gc.largestArmyPlayer = this.i
+            }
+          }
+          break
+        
+        case "Road Building":
+          if(gc.playerList[this.i].roadLeft >= 2) {
+            let bestRoads = false;
+            // this code is also dumb :) but needs to be speedy, so here we are
+            let buildableRoads = this.findBuildRoads(gc)
+            for(let r of buildableRoads) {
+              let saveRoadPlayer = r.player
+              r.player = this.i
+              let newGameCopy = this.copyGame(false, gc)
+              r.player = saveRoadPlayer
+              newGameCopy.playerList[this.i].roadLeft--
 
+              let nBuildRoads = this.findBuildRoads(newGameCopy)
+              for(let nr of nBuildRoads) {
+                let saveRoadPlayer = nr.player
+                nr.player = this.i
+                let newNewGameCopy = this.copyGame(false, newGameCopy)
+                nr.player = saveRoadPlayer
+                newNewGameCopy.playerList[this.i].roadLeft--
+
+                let w = this.calculateWeight(false, newNewGameCopy)
+                if(!bestRoads || bestRoads.w < w) {
+                  bestRoads = {gameCopy: newNewGameCopy, weight: w}
+                }
+              }
+            }
+            if(bestRoads){
+              success = true
+              gc = bestRoads.gameCopy
+            }
+          }
+          
+          break
+        
+        case "Year Of Plenty":
+          let bestCombination = false;
+          // this code is dumb :) but would take too much time otherwise, so here we are
+          for(let r1 in gc.resourceBank){
+            for(let r2 in gc.resourceBank){
+              let newGameCopy = this.copyGame(false, gc)
+              newGameCopy.resourceBank[r1]--
+              newGameCopy.playerList[this.i].resources[r1]++
+              if(bank[r1] > 0){
+                banknewGameCopy.resourceBank[r2]--
+                newGameCopy.playerList[this.i].resources[r2]++
+                if(bank[r2] > 0){
+                  if(bestCombination){
+                    let w = this.calculateWeight(false, newGameCopy)
+                    if(w > bestCombination.weight){
+                      bestCombination = {gameCopy: newGameCopy, weight: w}
+                    }
+                  } else {
+                    bestCombination = {gameCopy: newGameCopy, weight: this.calculateWeight(false, newGameCopy)}
+                  }
+                  success = true
+                }
+              }
+            }
+          }
+          if(bestCombination){
+            gc = bestCombination.gameCopy
+          }
+          break
+        
+        case "Monopoly":
+          let bestResource = false
+          // more stupid code go brr
+          for(let r in gc.resourceBank) {
+            let newGameCopy = this.copyGame(false, gc)
+            for(let p in newGameCopy.playerList) {
+              if(p != this.i) {
+                let amount = newGameCopy.playerList[p].resources[r]
+                newGameCopy.playerList[this.i].resources[r]+=amount
+                newGameCopy.playerList[p].resources[r]=0
+              }
+            }
+            let w = this.calculateWeight(false, newGameCopy)
+            if(!bestResource || bestResource.weight < w) {
+              bstCombination = {gameCopy: newGameCopy, weight: w}
+            }
+          }
+          if(bestResource) {
+            success = true
+            gc = bestResource.gameCopy
+          }
+          break
+        
+        case "Victory Point":
+          player.points ++
+          break
+    }
+    // remove the card from the player
+    if(success) player.developmentCards.splice(index, 1)
+    return gc
+  }
+  
+  moveRobber(changeMain = true,gc = false){
+    if(!gc){
+      gc = this.copyGame(true)
+    }
+    let locationList = []
+    let possibleLocations = gc.tileList.filter(t => t.name != "water" && t.name != "port" && t.name!="desert" && !t.robber)
+    gc.tileList.find(t => t.robber).robber = false
+    for(let location of possibleLocations){
+      let points = []
+      let a = Math.PI/3
+      for(let i=0; i<6; i++) { 
+        // add the points of the corner of the hexagon to the list of points, round it to 5 decimals
+        points.push([Math.round((Math.cos(a * i)+location.x)*100000)/100000,Math.round((Math.sin(a * i)+location.y)*100000)/100000])
+      }
+      // get a list of the players owning the junctions at these points
+      let players = points.map(p => gc.junctionList.find(j => (j.x == p[0] && j.y == p[1])).player).filter(p => p!==false)
+      let junctions = points.map(p => gc.junctionList.find(j => (j.x == p[0] && j.y == p[1]))).filter(j => j.player != this.i && j.building)
+      let totalResources = 0
+      for(let j of junctions){
+        if(j.building == "settlement"){
+          totalResources += 1
+        } else {
+          totalResources += 2
+        }
+      }
+      players = [...new Set(players)];      
+      let totalPoints = 0;
+      for(let p of players){
+        totalPoints += playerList[p].points
+      }
+      locationList.push({players: players, totalResources: totalResources, location: location, totalPoints: totalPoints})
+    }
+    /* removes the tiles with the player itself and sorts by the tiles with the most players */
+    locationList = locationList.filter(l => !l.players.includes(this.i)).sort((a, b) => b.totalResources- a.totalResources)
+    /* keeps only the tiles with the most settlements next to it and sorts by best dice value */
+    locationList = locationList.filter(l => l.totalResources == locationList[0].totalResources).sort((a, b) => Math.abs(7-a.location.dice) - Math.abs(7-b.location.dice))
+    /* keeps only the best dice value and sorts by the total amount of points of the player that are next to the tiles */
+    locationList = locationList.filter(l => Math.abs(7-l.location.dice) == Math.abs(7-locationList[0].location.dice)).sort((a, b)=> b.totalPoints - a.totalPoints)
+    /* selects a location of all locations that are left */
+    let bestLocation = locationList[Math.floor(Math.random()*locationList.length)]
+    bestLocation.location.robber = true
+    let victim = false
+    let possiblePlayerSteals = bestLocation.players.filter(p => playerList[p].resources.lumber || playerList[p].resources.wool|| playerList[p].resources.ore|| playerList[p].resources.brick||playerList[p].resources.grain)
+    if(possiblePlayerSteals.length != 0){
+      victim = possiblePlayerSteals[Math.floor(Math.random()*possiblePlayerSteals.length)]     
+      let totalResources = 0
+      for(let r in gc.playerList[victim].resources){
+        totalResources += gc.playerList[victim].resources[r]
+      }
+      if(totalResources!=0){
+        let stolenResource = Math.ceil(Math.random()*totalResources)
+        for(let r in gc.playerList[victim].resources){
+          stolenResource -= gc.playerList[victim].resources[r]
+          if(stolenResource <=0){
+            gc.playerList[victim].resources[r] -=1
+            gc.playerList[this.i].resources[r] += 1
+            break;
+          }
+        }
+      }
+    }
+    if(changeMain){
+      tileList = gc.tileList
+      playerList = gc.playerList
+      updateSidebar(false)
+    }
+    return
+  }
     
   robberLosing(amount){
     let resourcesRemoving = {
@@ -351,6 +626,29 @@ class AI {
       updateSidebar(false)
       updateResourcesInBank()
     }
+  }
+  
+  /* function for eveluating player trades */
+  acceptPlayerTrade(tradeGive,tradeGet){
+    let gc = this.gameCopy
+    let currentWeight = this.calculateWeight(false,gc)
+    let tradePossible = true
+    for(let r in tradeGive){
+      gc.playerList[this.i].resources[r] += tradeGet[r]
+      gc.playerList[turn].resources[r] += tradeGet[r]
+      gc.playerList[this.i].resources[r] -= tradeGive[r]
+      gc.playerList[turn].resources[r] += tradeGive[r]
+      if(gc.playerList[this.i].resources[r] < 0){
+        tradePossible = false;
+        break;
+      }
+    }
+    if(tradePossible){
+      if(currentWeight < this.calculateWeight(false,gc)){
+        return true;
+      }
+    }
+    return false
   }
   
   findBankTrades(gc = this.gameCopy){
@@ -523,10 +821,10 @@ class AI {
     // make copies of all objects
     for(let t of tl) gameCopy.tileList.push(new Tile(t.name,t.resource,t.dice,t.img,t.color,t.x,t.y,t.rot,t.robber,true))
     for(let r of rl) gameCopy.roadList.push(new Road(r.x1,r.y1,r.x2,r.y2,r.floorType,r.player))
-    for(let j of jl) gameCopy.junctionList.push(new Junction(j.x,j.y,j.floorType,false,false,j.player,j.building,j.resources,j.tradeResources))
+    for(let j of jl) gameCopy.junctionList.push(new Junction(j.x,j.y,j.floorType,false,false,j.player,j.building,j.resources,j.tradeResources,j.robber))
     
     for(let p of pl) {
-      gameCopy.playerList.push(p.copy(gameCopy))
+      gameCopy.playerList.push(p.copy(gameCopy,jl))
     }
     
     gameCopy.resourceBank = {...rb}
@@ -549,7 +847,9 @@ class AI {
     
     // console.log(this.weights.points)
     // point weight
-    weight += p.points*this.weights.points*10
+    weight += p.points*this.weights.points*25
+    
+    if(p.points >= 10) weight += this.weights.win
     
     // resource weight
     let tr = 0 // resource count so far
@@ -558,52 +858,64 @@ class AI {
       for(let i=0; i<p.resources[r]; i++) {
         tr++
         // the weight of each resource card is the weight of the resource type combined with the weight for too many cards
-        rw += (this.weights.resourceWeights[r] - (tr > 7 ? this.weights.manyCards : 0))/5
+        rw += (this.weights.resourceWeights[r] - (tr > this.weights.haveCards ? this.weights.manyCards+this.weights.resourceWeights[r]/2 : 0))/10
         
       } 
       weight += rw
-      // add something in here for having many of the same card
+      // add something in here for having many of the same card???
     }
-    
     
     // development card weight
     weight += p.developmentCards.length*this.weights.developmentCard
-    
     // longest road / largest army weights
     weight += p.longestRoad*this.weights.longerRoad/(p.longestRoadHolder ? 2 : 1)
     weight += p.armySize*this.weights.largerArmy/(p.largestArmyHolder ? 2 : 1)
-    
     // maximize amount of possible build junctions to build roads sensibly
     let buildJunctions = this.findBuildSettlements(gc)
     weight += (buildJunctions.length+p.buildings.length)*(this.weights.junctionPlaces)/5
-    
     // keep track of which resources the bot has access to already
     let builtResources = {lumber:0,wool:0,ore:0,brick:0,grain:0}
     
     // weights for each resource and port the player has built on
-    for(let j of p.buildings) {
-      // console.log(j)
+    for(let j of jl) {
+      if(j.player !== this.i || !j.building) continue;
       for(let r of j.resources) {
         // console.log(r)
         if(r.type && r.num) {
           weight += (this.weights.resourceWeights[r.type]*(j.building == "city" ? 2 : 1)
                       *(this.weights.diceProbability**Math.abs(r.num-7))*10)
                       /(builtResources[r.type] == 0 ? (1-this.weights.newResource)/10 : 1)
-
+          if(isNaN(weight)) console.log(weight)
           builtResources[r.type]++
         }
       } 
       for(let r of j.tradeResources) {
-        weight += this.weights.ports * this.weights.resourceWeights[r]/5
+        if(j.tradeResources != "general"){
+          weight += this.weights.ports * this.weights.resourceWeights[r]/5
+        }
+        if(isNaN(weight)) console.log(weight,this.weights.ports,this.weights.resourceWeights[r],r)
       }
     }
+    if(isNaN(weight)) console.log(weight)
+    for(let buy in buyData) {
+      let canBuy = true;
+      let cost = buyData[buy].cost
+      for(let r in cost) {
+        if(gc.playerList[this.i].resources[r] < cost[r]) canBuy=false;
+      }
+      if(canBuy) weight+=this.weights.affordBuyWeights[buy]
+      if(isNaN(weight)) console.log(weight,this.weights.affordBuyWeights[buy],buy) 
+    }
+    if(isNaN(weight)) console.log(weight)    
+    
     return weight
   }
 }
 
 function generateWeights() {
   return {
-    win: 100,
+    win: 1000000,
+    haveCards: 7+Math.floor(Math.random()*10),
     points: Math.random(),
     diceProbability: Math.random(),
     developmentCard: Math.random(),
@@ -623,8 +935,13 @@ function generateWeights() {
       brick: Math.random(),
       grain: Math.random(),
       general: Math.random()
-      
-    }    
+    },
+    affordBuyWeights: {
+      road: Math.random(),
+      settlement: Math.random(),
+      city: Math.random(),
+      developmentCard: Math.random()
+    }
     /*resourceWeights: {
       lumber: 0.5,
       wool: 0.5,

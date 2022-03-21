@@ -1,6 +1,10 @@
 // set all the main game things
 function setupGame(previousAiList=false){
-  if(previousAiList) console.log("WINNER:" + previousAiList[0].i, JSON.stringify(previousAiList[0].weights))
+  if(previousAiList){
+    if(previousAiList[0].gameWins >= 3){
+      console.log("WINNER:" + previousAiList[0].i, JSON.stringify(previousAiList[0].weights))
+    }
+  }
   let playerAmount = amountInput.value
   let colorCheck = [];
   playerList = []
@@ -19,17 +23,22 @@ function setupGame(previousAiList=false){
     let computerSelection = document.getElementById("aiSelection"+i).value
     if(name.length < 1) name = "player " + i 
     if(computerSelection == "computer"){
-      playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color,true))
+      playerList.push(new Player(name.replace(/</g, "&lt;").replace(/>/g, "&gt;"),color,true))
       if(!previousAiList){
         aiList.push(new AI(i-1,0,0,0,0))
       } else {
-        console.log("AI " + String(i-1), previousAiList[i-1])
-        
-        aiList.push(new AI(i-1,previousAiList.length,i-1,previousAiList[i-1].weights,previousAiList[0].weights))
+        console.log(previousAiList)
+        console.log(setupPhase, setupAmount)
+        if(previousAiList[0].gameWins >= 3){
+          console.log("AI " + String(i-1), previousAiList[i-1])
+          aiList.push(new AI(i-1,previousAiList.length,i-1,previousAiList[i-1].weights,previousAiList[0].weights))
+        } else if(i == playerAmount) {
+          console.log("same aiList")
+          aiList = [...previousAiList] // this might be broken
+        }
       }
     } else {
-      // html injection can be prevent but Lukas refuses to have it
-      playerList.push(new Player(name/*.replace(/</g, "&lt;").replace(/>/g, "&gt;")*/,color))
+      playerList.push(new Player(name.replace(/</g, "&lt;").replace(/>/g, "&gt;"),color))
     }
   }  
   if(!previousAiList){

@@ -79,8 +79,8 @@ function confirmTradeRequest(confirm){
     document.getElementById("tradeWithPlayers").disabled = false;    */
     return
   }
-  document.getElementById("acceptTradeDisplay").style.display = "block"
   tradeAcceptingPlayer = (turn == 0)? 1 : 0;
+  document.getElementById("acceptTradeDisplay").style.display = "block"    
   let resourceCheck = true
   document.getElementById("tradeAcceptPlayer").innerHTML = playerList[tradeAcceptingPlayer].name
   document.getElementById("tradeAcceptPlayer").style.color = playerList[tradeAcceptingPlayer].color
@@ -94,6 +94,28 @@ function confirmTradeRequest(confirm){
   }
   document.getElementById("noResourcesAccepting").style.display = resourceCheck ? "none" : "block"
   document.getElementById("acceptTrade").disabled = !resourceCheck
+  if(playerList[tradeAcceptingPlayer].ai){
+    document.getElementById("acceptTradeDisplay").style.display = "none"    
+    let tradeGiveResources = {
+      lumber:0,
+      wool:0,
+      ore:0,
+      brick:0,
+      grain:0
+    }
+    let tradeGetResources = {
+      lumber:0,
+      wool:0,
+      ore:0,
+      brick:0,
+      grain:0
+    }
+    for(let r in tradeGiveResources){
+      tradeGiveResources[r] = JSON.parse(document.getElementById(r+"OfferAccept").innerHTML)      
+      tradeGetResources[r] = JSON.parse(document.getElementById(r+"RequestAccept").innerHTML)
+    }
+    acceptTrade(aiList.find(ai => ai.i == tradeAcceptingPlayer).acceptPlayerTrade(tradeGetResources,tradeGiveResources))
+  }
 }
 
 function acceptTrade(accepted){
@@ -132,17 +154,40 @@ function acceptTrade(accepted){
     */
     return
   }
-  let resourceCheck = true  
-  document.getElementById("tradeAcceptPlayer").innerHTML = playerList[tradeAcceptingPlayer].name
-  document.getElementById("tradeAcceptPlayer").style.color = playerList[tradeAcceptingPlayer].color
-  for(let r in playerList[tradeAcceptingPlayer].resources){
-    document.getElementById(r+"AcceptingTotal").innerHTML = playerList[tradeAcceptingPlayer].resources[r];
-    if(playerList[tradeAcceptingPlayer].resources[r]<document.getElementById(r+"RequestAmount").value){ 
-      resourceCheck = false;
+  let resourceCheck = true 
+  if(playerList[tradeAcceptingPlayer].ai){
+    document.getElementById("acceptTradeDisplay").style.display = "none"    
+    let tradeGiveResources = {
+      lumber:0,
+      wool:0,
+      ore:0,
+      brick:0,
+      grain:0
     }
+    let tradeGetResources = {
+      lumber:0,
+      wool:0,
+      ore:0,
+      brick:0,
+      grain:0
+    }
+    for(let r in tradeGiveResources){
+      tradeGiveResources[r] = JSON.parse(document.getElementById(r+"OfferAccept").innerHTML)      
+      tradeGetResources[r] = JSON.parse(document.getElementById(r+"RequestAccept").innerHTML)
+    }
+    acceptTrade(aiList.find(ai => ai.i == tradeAcceptingPlayer).acceptPlayerTrade(tradeGetResources,tradeGiveResources))
+  } else {
+    document.getElementById("tradeAcceptPlayer").innerHTML = playerList[tradeAcceptingPlayer].name
+    document.getElementById("tradeAcceptPlayer").style.color = playerList[tradeAcceptingPlayer].color
+    for(let r in playerList[tradeAcceptingPlayer].resources){
+      document.getElementById(r+"AcceptingTotal").innerHTML = playerList[tradeAcceptingPlayer].resources[r];
+      if(playerList[tradeAcceptingPlayer].resources[r]<document.getElementById(r+"RequestAmount").value){ 
+        resourceCheck = false;
+      }
+    }
+    document.getElementById("noResourcesAccepting").style.display = resourceCheck ? "none" : "block"
+    document.getElementById("acceptTrade").disabled = !resourceCheck  
   }
-  document.getElementById("noResourcesAccepting").style.display = resourceCheck ? "none" : "block"
-  document.getElementById("acceptTrade").disabled = !resourceCheck  
 }
 
 const lumberOffer = document.getElementById("lumberOfferAmount")

@@ -27,6 +27,7 @@ function knightCard(p) {
     // if someone already is the largest army holder, check if the player's army size is bigger than that of the current largest army holder
     let largestArmyHolder = playerList[largestArmyPlayer]
     if(player.armySize > largestArmyHolder.armySize) {
+      largestArmyPlayer = p
       largestArmyHolder.points-=2
       player.points+=2
       largestArmyHolder.largestArmyHolder = false;
@@ -71,9 +72,6 @@ function pointCard(p) {
   // give the player a point
   player.points++
 }
-
-
-
 
 
 // pick a resource to get (year of plenty card)
@@ -153,9 +151,9 @@ function useCard(p, index) {
   console.log(p,index)
   document.getElementById("informationDisplay").style.display = "none"
   // use the card
-  player.developmentCards[index].cardFunc(p)
+  this.playerList[this.i].developmentCards[index].cardFunc(p)
   // remove the card from the player
-  player.developmentCards.splice(index, 1)
+  this.playerList[this.i].developmentCards.splice(index, 1)
 }
 
 

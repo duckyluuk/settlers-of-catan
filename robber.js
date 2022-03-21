@@ -50,15 +50,19 @@ function robberActions() {
       }
     } 
   } else {
-    newRobberLocation = true;
-    disableButtons(true)
-    /*
-    document.getElementById("shopButton").disabled = true;  
-    document.getElementById("endTurnButton").disabled = true;
-    document.getElementById("bankTrade").disabled = true
-    document.getElementById("tradeWithPlayers").disabled = true;
-    document.getElementById("playerCards"+turn).disabled = true;*/
-    document.getElementById("placeRobberInfo").style.display="block"
+    if(playerList[turn].ai){
+      aiList.find(ai => ai.i == turn).moveRobber()
+    } else{
+      newRobberLocation = true;
+      disableButtons(true)
+      /*
+      document.getElementById("shopButton").disabled = true;  
+      document.getElementById("endTurnButton").disabled = true;
+      document.getElementById("bankTrade").disabled = true
+      document.getElementById("tradeWithPlayers").disabled = true;
+      document.getElementById("playerCards"+turn).disabled = true;*/
+      document.getElementById("placeRobberInfo").style.display="block"
+    }
   }
 }
 
@@ -77,10 +81,19 @@ function confirmRobber(){
   if(player == turn){
     updateSidebar(turn)
   }
+  let lastRobbedPlayer = robbedPlayers[0][0]
   robbedPlayers.shift()
   if(robbedPlayers.length == 0){
-    newRobberLocation = true;
-    document.getElementById("placeRobberInfo").style.display="block"
+    if(playerList[turn].ai){
+      aiList.find(ai => ai.i == turn).moveRobber()
+      console.log(lastRobbedPlayer,playerList[lastRobbedPlayer])
+      if(!playerList[lastRobbedPlayer].ai){
+        endTurn()
+      }
+    } else {
+      newRobberLocation = true;
+      document.getElementById("placeRobberInfo").style.display="block"
+    }
     // document.getElementById("buttonDiv").style.display="none"
   } else { /* could be put in a function cus its double */
     if(playerList[robbedPlayers[0][0]].ai){
@@ -122,4 +135,28 @@ function losingResources(resource){
   } else {
     document.getElementById("robberConfirmationButton").disabled = true
   }
+}
+
+
+function playerSteals(victim,totalResources){
+  if(totalResources!=0){
+    let stolenResource = Math.ceil(Math.random()*totalResources)
+    for(let r in playerList[victim].resources){
+      stolenResource -= playerList[victim].resources[r]
+      if(stolenResource <=0){
+        playerList[victim].resources[r] -=1
+        playerList[turn].resources[r] += 1
+        break;
+      }
+    }
+  }
+  disableButtons(false)
+  /*
+  document.getElementById("shopButton").disabled = false;  
+  document.getElementById("endTurnButton").disabled = false;
+  document.getElementById("bankTrade").disabled = false;
+  document.getElementById("tradeWithPlayers").disabled = false;
+  document.getElementById("playerCards"+turn).disabled = false; */
+  document.getElementById("informationDisplay").style.display = "none"  
+  updateSidebar(turn)
 }
