@@ -218,7 +218,7 @@ class AI {
       }
     }
     // console.log(tradeCount)
-    if(tradeCount<3) {
+    if(tradeCount<1) {
       for(let trades in actions.trade){
         for(let t in actions.trade[trades]){
           if(trades == "bank"){
@@ -493,7 +493,7 @@ class AI {
             }
             let w = this.calculateWeight(false, newGameCopy)
             if(!bestResource || bestResource.weight < w) {
-              bstCombination = {gameCopy: newGameCopy, weight: w}
+              bestResource = {gameCopy: newGameCopy, weight: w}
             }
           }
           if(bestResource) {

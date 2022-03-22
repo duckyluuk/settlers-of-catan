@@ -9,6 +9,8 @@ html {
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
+  font-family: Andale Mono, monospace;
+  font-size: 16px;
 }
 
 body {
@@ -182,4 +184,9 @@ body {
 
 table, th, td {
 /*   border: 1px solid white; */
+}
+
+input, button, select {
+  font-family: Andale Mono, monospace;
+  font-size: 16px;
 }

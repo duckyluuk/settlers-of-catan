@@ -1,3 +1,8 @@
+/* this file contains the data for:
+  buyData: name and cost
+  tileData: resource, image and color
+*/
+
 // costs of all buildings
 let buyData = {
   road : {
@@ -84,6 +89,7 @@ var tileData = {
   }
 }
 
+/* this loads the images of each tile beforehand so when the map is rendered the images do not have to render*/
 tileData.hills.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/brick_tile.png"
 tileData.forest.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/lumber_tile.png" 
 tileData.mountains.img.src = "https://cdn.glitch.global/36f95d5d-d303-4106-929b-7b4cf36b4608/ore_tile.png" 
